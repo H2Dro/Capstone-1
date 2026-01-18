@@ -1,0 +1,127 @@
+
+import React from 'react';
+import { Icon } from './Icon';
+import { AppointmentItem } from '../types';
+
+interface AppointmentsProps {
+  appointments: AppointmentItem[];
+  onAdd: () => void;
+  onReschedule: (appt: AppointmentItem) => void;
+}
+
+export const Appointments: React.FC<AppointmentsProps> = ({ 
+  appointments, 
+  onAdd, 
+  onReschedule
+}) => {
+  return (
+    <div className="flex flex-col animate-fade-in pb-24">
+      {/* Header with Title and Back logic handled by Header component usually, 
+          but if this is a standalone view we show the title here */}
+      <div className="flex items-center gap-4 mb-8 pt-4">
+        <h1 className="text-3xl font-bold text-[#111827]">Appointments</h1>
+      </div>
+
+      {/* Appointment List */}
+      <div className="space-y-6">
+        {appointments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4 border-2 border-dashed border-slate-200">
+                    <Icon name="calendar" size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-2">No visits scheduled</h2>
+                <p className="text-slate-500 mb-8 max-w-[240px]">Keep track of your doctor visits and checkups here.</p>
+                <button 
+                  onClick={onAdd}
+                  className="bg-[#4182F9] text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-blue-100 active:scale-95 transition-transform flex items-center gap-2"
+                >
+                    <Icon name="plus" size={20} />
+                    <span>Book Appointment</span>
+                </button>
+            </div>
+        ) : (
+            appointments.map((appt) => (
+                <div 
+                    key={appt.id}
+                    className="bg-white rounded-[2.5rem] p-6 shadow-soft border border-slate-50 flex flex-col gap-5 relative transition-all"
+                >
+                    <div className="flex items-start gap-4">
+                        {/* Profile Avatar */}
+                        <div className="w-16 h-16 bg-[#F1F5F9] rounded-full flex items-center justify-center text-slate-400 shrink-0">
+                            <Icon name="user" size={28} />
+                        </div>
+
+                        {/* Name and Basic Info */}
+                        <div className="flex-1 min-w-0 pt-1">
+                            <div className="flex justify-between items-start">
+                                <h4 className="font-bold text-2xl text-[#111827] leading-tight">
+                                    {appt.doctorName.split(' ').map((word, i) => (
+                                        <React.Fragment key={i}>
+                                            {word}{i === 0 ? <br /> : ''}
+                                        </React.Fragment>
+                                    ))}
+                                </h4>
+                                
+                                <div className="flex items-center gap-3">
+                                    {/* Date Badge */}
+                                    <div className="bg-[#F8FAFC] px-3 py-2 rounded-2xl flex flex-col items-center gap-0.5 border border-slate-50">
+                                        <Icon name="calendar" size={14} className="text-slate-400" />
+                                        <span className="text-[10px] font-black text-slate-500 uppercase leading-none">
+                                            {appt.date}
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Favorite Heart */}
+                                    <button className="p-1">
+                                        <Icon 
+                                            name="heart" 
+                                            size={24} 
+                                            className={appt.favorite ? 'fill-[#FF5A72] text-[#FF5A72]' : 'text-slate-300'} 
+                                        />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* Specialty and Hospital */}
+                            <p className="text-slate-400 font-bold text-sm mt-1">
+                                {appt.specialty} <span className="mx-1 text-slate-200">|</span> {appt.hospital}
+                            </p>
+
+                            {/* Rating and Time Row */}
+                            <div className="flex items-center gap-6 mt-4">
+                                <div className="flex items-center gap-1.5">
+                                    <Icon name="star" size={18} className="fill-[#FBBF24] text-[#FBBF24]" />
+                                    <span className="font-black text-slate-700">{appt.rating}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-slate-400">
+                                    <Icon name="clock" size={18} />
+                                    <span className="font-bold text-sm">{appt.time}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Reschedule Button */}
+                    <button 
+                        onClick={() => onReschedule(appt)}
+                        className="w-full py-5 bg-[#4182F9] text-white rounded-[1.25rem] font-black text-lg shadow-lg shadow-blue-100 hover:bg-[#3572E8] active:scale-[0.98] transition-all"
+                    >
+                        Reschedule
+                    </button>
+                </div>
+            ))
+        )}
+
+        {/* Add New Entry dashed card */}
+        <button 
+            onClick={onAdd}
+            className="w-full h-32 rounded-[2.5rem] border-2 border-dashed border-[#CED8FF] bg-[#F9FAFF] flex items-center justify-center group active:scale-[0.98] transition-all"
+        >
+            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#4182F9] shadow-sm group-hover:scale-110 transition-transform">
+                <Icon name="plus" size={28} />
+            </div>
+        </button>
+      </div>
+    </div>
+  );
+};
