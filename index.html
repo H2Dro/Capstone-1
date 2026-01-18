@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,19 +42,20 @@
     </script>
     <style>
       :root {
-        --transition-speed: 250ms;
+        --transition-speed: 120ms; /* Snappy interaction speed */
         --root-font-size: 16px;
       }
 
-      /* Base scaling for ADA compliance */
       html {
         font-size: var(--root-font-size);
         overflow: hidden;
         height: 100%;
         width: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        touch-action: manipulation;
       }
 
-      /* Global Scaling based on Preference - Balanced for fitting */
       html[data-size="small"] { --root-font-size: 13px; }
       html[data-size="medium"] { --root-font-size: 16px; }
       html[data-size="large"] { --root-font-size: 19px; }
@@ -71,18 +73,8 @@
       }
       
       * {
-        transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 150ms ease-out;
+        transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 80ms cubic-bezier(0, 0, 0.2, 1);
         -webkit-tap-highlight-color: transparent;
-      }
-
-      /* Reduced Motion Override */
-      html.reduce-motion *,
-      html.reduce-motion *::before,
-      html.reduce-motion *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
       }
 
       .glass-panel {
@@ -96,59 +88,45 @@
         box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
       }
 
-      @keyframes pulse-glow {
-        0%, 100% { opacity: 0.5; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.02); }
+      /* High Speed Animations */
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(4px) scale(0.99); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .animate-fade-in {
+        animation: fade-in 150ms cubic-bezier(0, 0, 0.2, 1) forwards;
+        will-change: transform, opacity;
       }
 
-      .accent-pulse {
-        animation: pulse-glow 3s infinite ease-in-out;
+      @keyframes slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-slide-up {
+        animation: slide-up 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
+        will-change: transform, opacity;
       }
 
-      button:active {
-        transform: scale(0.96);
+      @keyframes scale-up {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .animate-scale-up {
+        animation: scale-up 180ms cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+        will-change: transform, opacity;
+      }
+
+      @keyframes pop {
+        0% { transform: scale(0.96); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .animate-pop {
+        animation: pop 120ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        will-change: transform, opacity;
       }
 
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-      /* High Contrast AAA Compliance Overrides */
-      html.high-contrast {
-        --brand-50: #ffffff;
-        --brand-100: #000000;
-        --brand-200: #000000;
-        --brand-500: #000000;
-        --brand-600: #000000;
-        --brand-700: #000000;
-      }
-
-      html.high-contrast body {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-      }
-
-      html.high-contrast button,
-      html.high-contrast .glass-panel {
-        border: 2px solid #000000 !important;
-        background: #ffffff !important;
-        color: #000000 !important;
-        box-shadow: none !important;
-      }
-
-      html.high-contrast .bg-brand-600,
-      html.high-contrast .bg-indigo-600 {
-        background-color: #000000 !important;
-        color: #ffffff !important;
-      }
-
-      @keyframes pop {
-        0% { transform: scale(0.95); opacity: 0; }
-        70% { transform: scale(1.02); opacity: 1; }
-        100% { transform: scale(1); opacity: 1; }
-      }
-      .animate-pop {
-        animation: pop 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-      }
     </style>
   <script type="importmap">
 {

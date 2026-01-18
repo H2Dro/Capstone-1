@@ -82,7 +82,13 @@ import {
   Dog,
   Cat,
   Fish,
-  Droplet
+  Droplet,
+  Book,
+  ShoppingBag,
+  Coffee,
+  Film,
+  Tv,
+  Footprints
 } from 'lucide-react';
 
 interface IconProps {
@@ -185,6 +191,12 @@ export const Icon: React.FC<IconProps> = ({ name, size = 24, className = "" }) =
     case 'dog': return <Dog {...iconProps} />;
     case 'cat': return <Cat {...iconProps} />;
     case 'fish': return <Fish {...iconProps} />;
+    case 'reading': return <Book {...iconProps} />;
+    case 'shopping': return <ShoppingBag {...iconProps} />;
+    case 'coffee': return <Coffee {...iconProps} />;
+    case 'movie': return <Film {...iconProps} />;
+    case 'tv': return <Tv {...iconProps} />;
+    case 'walking': return <Footprints {...iconProps} />;
     default: return <Sun {...iconProps} />;
   }
 };

@@ -112,10 +112,11 @@ const App: React.FC = () => {
 
   const showSuccess = (msg: string, nextView?: ViewState) => {
     setSuccessMessage(msg);
+    // Reduced from 1800ms to 1200ms for faster task cycle
     setTimeout(() => {
       setSuccessMessage(null);
       if (nextView) navigateTo(nextView);
-    }, 1800);
+    }, 1200);
   };
 
   const handleToggleTaken = (id: string) => {
@@ -147,7 +148,7 @@ const App: React.FC = () => {
     switch (view) {
       case ViewState.DASHBOARD:
         return (
-          <div className="space-y-10 pb-20 animate-fade-in">
+          <div className="space-y-10 pb-20 animate-fade-in transform-gpu">
             {/* Header Greeting Section */}
             <header className="px-1 mt-2">
               <h1 className="text-[2.6rem] font-bold text-[#111827] leading-[1.1] tracking-tight">
@@ -251,7 +252,7 @@ const App: React.FC = () => {
 
       case ViewState.MEDICATIONS:
         return (
-          <section className="animate-fade-in pt-6 pb-20 max-w-sm mx-auto">
+          <section className="animate-fade-in pt-6 pb-20 max-w-sm mx-auto transform-gpu">
             <h2 className="text-center text-3xl font-black text-[#1F2B4D] mb-8 leading-tight">Daily Medications</h2>
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 px-1">
               {sortedMedications.map(med => (
@@ -367,7 +368,7 @@ const App: React.FC = () => {
 const DashboardCategoryButton: React.FC<{ icon: string; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
   <button 
     onClick={onClick}
-    className="aspect-square bg-white rounded-[3rem] flex flex-col items-center justify-center gap-3 shadow-soft border border-slate-100 active:scale-95 transition-all group p-4"
+    className="aspect-square bg-white rounded-[3rem] flex flex-col items-center justify-center gap-3 shadow-soft border border-slate-100 active:scale-95 transition-all group p-4 transform-gpu"
   >
     <div className="text-[#4f46e5] group-hover:scale-110 transition-transform">
       <Icon name={icon} size={36} />
