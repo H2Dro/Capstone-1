@@ -1,5 +1,6 @@
 
 export enum ViewState {
+  LOGIN = 'LOGIN',
   DASHBOARD = 'DASHBOARD',
   ACTIVITIES = 'ACTIVITIES',
   ADD_ACTIVITY = 'ADD_ACTIVITY',
@@ -18,6 +19,15 @@ export enum ViewState {
   PATIENT_PORTAL = 'PATIENT_PORTAL',
   TODAY_DETAIL = 'TODAY_DETAIL',
   GAMES = 'GAMES'
+}
+
+export type UserRole = 'PATIENT' | 'CAREGIVER';
+
+export interface User {
+  username: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
 }
 
 export interface ActivityItem {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Icon } from './Icon';
 
@@ -56,7 +55,7 @@ const SCRAMBLE_WORDS = [
     { word: 'CHECKUP', hint: 'Routine medical exam' },
     { word: 'NURSE', hint: 'Healthcare assistant' },
     { word: 'CALENDAR', hint: 'Tracks your dates' },
-    { word: 'CLINTON', hint: 'A popular doctor name' },
+    { word: 'DENTIST', hint: 'Teeth specialist' },
     { word: 'SURGERY', hint: 'A major operation' },
     { word: 'RECOVERY', hint: 'Getting better after illness' }
 ];
@@ -226,7 +225,6 @@ export const GamesHub: React.FC<GamesHubProps> = ({ onBack }) => {
 
   const initScramble = (forceRound?: number) => {
       const targetRound = forceRound !== undefined ? forceRound : scrambleRound;
-      // Loop back to start if we run out of words
       const itemIndex = targetRound % SCRAMBLE_WORDS.length;
       const item = SCRAMBLE_WORDS[itemIndex];
       
@@ -258,12 +256,11 @@ export const GamesHub: React.FC<GamesHubProps> = ({ onBack }) => {
           setScrambleComplete(true);
           setIsCheckpoint(reachedCheckpoint);
           
-          // Regular treat + bonus for checkpoint
           const bonus = reachedCheckpoint ? 5 : 0;
           setTreats(t => t + 1 + bonus);
           
           if (reachedCheckpoint) {
-              triggerInteraction('Checkpoint reached! 🏆');
+              triggerInteraction('Checkpoint! +5 treats 🍖');
           }
           
           setPet(p => ({ ...p, xp: p.xp + (reachedCheckpoint ? 50 : 15) }));
@@ -326,14 +323,12 @@ export const GamesHub: React.FC<GamesHubProps> = ({ onBack }) => {
       setUserSequence(newUserSeq);
 
       if (pad !== sequence[newUserSeq.length - 1]) {
-          // Failure
           triggerInteraction('Try Again! ❌');
           initPattern();
           return;
       }
 
       if (newUserSeq.length === sequence.length) {
-          // Success
           setPatternRound(r => r + 1);
           if ((patternRound + 1) % 3 === 0) setTreats(t => t + 1);
           const next = [...sequence, Math.floor(Math.random() * 4)];
@@ -447,40 +442,46 @@ export const GamesHub: React.FC<GamesHubProps> = ({ onBack }) => {
             </div>
         )}
         {scrambleComplete && (
-            <div className={`fixed inset-0 z-50 flex items-center justify-center ${isCheckpoint ? 'bg-yellow-400/95' : 'bg-brand-600/90'} backdrop-blur-md animate-fade-in p-8`}>
-                <div className="text-center text-white space-y-6 animate-pop">
-                    <div className="relative inline-block">
-                        <Icon name={isCheckpoint ? "trophy" : "check-plain"} size={80} className={`mx-auto ${isCheckpoint ? 'text-yellow-100' : 'text-white'}`} />
-                        {isCheckpoint && <div className="absolute inset-0 animate-ping rounded-full border-4 border-white/20"></div>}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-fade-in p-8">
+                {/* Background Confetti Dots */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute top-10 left-10 w-3 h-3 bg-yellow-400 rounded-full animate-bounce opacity-80" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="absolute top-20 right-20 w-2 h-2 bg-brand-400 rounded-full animate-bounce opacity-60" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="absolute bottom-24 left-16 w-3 h-3 bg-rose-400 rounded-full animate-bounce opacity-70" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="absolute bottom-40 right-12 w-2 h-2 bg-blue-400 rounded-full animate-bounce opacity-80" style={{ animationDelay: '0.4s' }}></div>
+                    <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-emerald-400 rounded-full animate-pulse opacity-80"></div>
+                    <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-purple-400 rounded-full animate-pulse opacity-60"></div>
+                    <div className="absolute bottom-1/4 right-1/2 w-2 h-2 bg-orange-400 rounded-full animate-bounce opacity-70" style={{ animationDelay: '0.5s' }}></div>
+                </div>
+
+                <div className="bg-white rounded-[2.5rem] p-8 text-center shadow-2xl animate-pop max-w-xs w-full space-y-6 relative">
+                    <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto ${isCheckpoint ? 'bg-yellow-100 text-yellow-600' : 'bg-brand-50 text-brand-600'}`}>
+                        <Icon name={isCheckpoint ? "trophy" : "check-plain"} size={44} />
                     </div>
                     
                     <div className="space-y-1">
-                        <h2 className={`text-4xl font-black ${isCheckpoint ? 'text-yellow-900' : 'text-white'}`}>
+                        <h2 className="text-3xl font-black text-slate-900">
                             {isCheckpoint ? 'CHECKPOINT!' : 'PERFECT!'}
                         </h2>
-                        <p className={`text-xl font-bold opacity-80 ${isCheckpoint ? 'text-yellow-800' : 'text-white'}`}>
+                        <p className="text-lg font-bold text-slate-400">
                             Level {scrambleRound + 1} Complete
                         </p>
                     </div>
 
-                    {isCheckpoint && (
-                        <div className="bg-white/20 backdrop-blur rounded-2xl p-4 border border-white/30">
-                            <div className="flex items-center justify-center gap-2">
-                                <Icon name="bone" size={24} className="text-yellow-900" />
-                                <span className="text-yellow-900 font-black text-xl">+5 CHECKPOINT BONUS</span>
-                            </div>
-                        </div>
-                    )}
+                    <div className={`rounded-2xl p-4 border flex items-center justify-center gap-3 ${isCheckpoint ? 'bg-yellow-50 border-yellow-100 text-yellow-700' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                        <Icon name="bone" size={24} className={isCheckpoint ? 'text-yellow-600' : 'text-brand-500'} />
+                        <span className="font-black text-lg">+{isCheckpoint ? '6 TREATS' : '1 TREAT'}</span>
+                    </div>
 
                     <button 
                         onClick={nextScrambleLevel} 
-                        className={`px-12 py-4 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-95 ${
+                        className={`w-full py-5 rounded-2xl font-black text-lg shadow-xl transition-all active:scale-95 ${
                             isCheckpoint 
-                            ? 'bg-yellow-900 text-white' 
-                            : 'bg-white text-brand-600'
+                            ? 'bg-yellow-500 text-yellow-950 shadow-yellow-100' 
+                            : 'bg-brand-600 text-white shadow-brand-100'
                         }`}
                     >
-                        Next Level
+                        {isCheckpoint ? 'Collect Bonus' : 'Next Level'}
                     </button>
                 </div>
             </div>

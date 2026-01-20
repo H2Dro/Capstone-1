@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ViewState, ActivityItem, AppointmentItem, MedicationItem } from './types';
+import { ViewState, ActivityItem, AppointmentItem, MedicationItem, User } from './types';
 import { MOCK_ACTIVITIES, MOCK_MEDICATIONS, MOCK_APPOINTMENTS } from './constants';
-import { DashboardCard } from './components/DashboardCard';
 import { Icon } from './components/Icon';
 import { Assistant } from './components/Assistant';
 import { AddActivity } from './components/AddActivity';
@@ -23,20 +22,31 @@ import { Appointments } from './components/Appointments';
 import { Activities } from './components/Activities';
 import { MobileMenu } from './components/MobileMenu';
 import { Header } from './components/Header';
+import { Login } from './components/Login';
+import { CaregiverDashboard } from './components/CaregiverDashboard';
 import { useTheme } from './contexts/ThemeContext';
 
 const App: React.FC = () => {
   const { fontSize } = useTheme();
-  const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
-  const [history, setHistory] = useState<ViewState[]>([ViewState.DASHBOARD]);
+  
+  // User state
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('gs-user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [view, setView] = useState<ViewState>(() => {
+    const saved = localStorage.getItem('gs-user');
+    return saved ? ViewState.DASHBOARD : ViewState.LOGIN;
+  });
+
+  const [history, setHistory] = useState<ViewState[]>([view]);
   const [showAssistant, setShowAssistant] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  // Ref for the main scroll container
   const mainScrollRef = useRef<HTMLElement>(null);
 
-  // Scroll to top whenever the view changes
   useEffect(() => {
     if (mainScrollRef.current) {
       mainScrollRef.current.scrollTo(0, 0);
@@ -88,8 +98,21 @@ const App: React.FC = () => {
     return [...medications].sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
   }, [medications]);
 
-  const medsTaken = medications.filter(m => m.taken).length;
-  const totalMeds = medications.length;
+  const medsRemaining = medications.filter(m => !m.taken).length;
+
+  const handleLogin = (user: User) => {
+    localStorage.setItem('gs-user', JSON.stringify(user));
+    setCurrentUser(user);
+    navigateTo(ViewState.DASHBOARD);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('gs-user');
+    setCurrentUser(null);
+    setView(ViewState.LOGIN);
+    setHistory([ViewState.LOGIN]);
+    setShowMobileMenu(false);
+  };
 
   const navigateTo = (nextView: ViewState) => {
     if (nextView === view) return;
@@ -105,17 +128,20 @@ const App: React.FC = () => {
       setHistory(newHistory);
       setView(prevView);
     } else {
-      setView(ViewState.DASHBOARD);
-      setHistory([ViewState.DASHBOARD]);
+      const defaultView = currentUser ? ViewState.DASHBOARD : ViewState.LOGIN;
+      setView(defaultView);
+      setHistory([defaultView]);
     }
   };
 
   const showSuccess = (msg: string, nextView?: ViewState) => {
     setSuccessMessage(msg);
-    // Reduced from 1800ms to 1200ms for faster task cycle
     setTimeout(() => {
       setSuccessMessage(null);
-      if (nextView) navigateTo(nextView);
+      // Change: Default back to Dashboard (Home) after a success action
+      if (nextView) {
+          navigateTo(ViewState.DASHBOARD);
+      }
     }, 1200);
   };
 
@@ -145,83 +171,99 @@ const App: React.FC = () => {
   };
 
   const renderCurrentView = () => {
+    if (!currentUser) return <Login onLogin={handleLogin} />;
+
     switch (view) {
       case ViewState.DASHBOARD:
+        if (currentUser.role === 'CAREGIVER') {
+          return (
+            <CaregiverDashboard 
+              user={currentUser}
+              activities={activities}
+              medications={medications}
+              appointments={appointments}
+              onNavigate={navigateTo}
+            />
+          );
+        }
         return (
           <div className="space-y-10 pb-20 animate-fade-in transform-gpu">
-            {/* Header Greeting Section */}
-            <header className="px-1 mt-2">
+            {/* Interactive Header Greeting Section */}
+            <button 
+              onClick={() => navigateTo(ViewState.TODAY_DETAIL)}
+              className="w-full text-left px-1 mt-2 active:scale-[0.98] transition-all group"
+            >
               <h1 className="text-[2.6rem] font-bold text-[#111827] leading-[1.1] tracking-tight">
                 Good Morning,<br />
-                <span className="text-[#6366f1] font-bold">Elanor</span>
+                <span className="text-brand-600 font-bold">{currentUser.firstName}</span>
               </h1>
-            </header>
+              <p className="text-slate-400 font-bold mt-2 flex items-center gap-1.5 group-hover:text-brand-500 transition-colors">
+                View your schedule <Icon name="chevron-right" size={16} />
+              </p>
+            </button>
 
-            {/* Up Next Section */}
+            {/* Daily Summary Hero Card */}
             <section className="space-y-4">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-2xl font-bold text-[#111827]">Up Next</h3>
-                <div className="bg-[#EEF2FF] px-4 py-1.5 rounded-full">
-                    <span className="text-[#4f46e5] font-bold text-sm tracking-tight">{activities[0]?.time || "10:00 AM"}</span>
-                </div>
+                <h3 className="text-2xl font-bold text-[#111827]">Today at a Glance</h3>
               </div>
               
               <button 
-                onClick={() => {
-                   if (activities[0]) {
-                      setSelectedActivity(activities[0]);
-                      navigateTo(ViewState.ACTIVITY_DETAIL);
-                   } else {
-                      navigateTo(ViewState.TODAY_DETAIL);
-                   }
-                }}
-                className="w-full bg-gradient-to-br from-[#5D5FEF] to-[#4F46E5] rounded-[2.5rem] p-8 text-left shadow-2xl shadow-[#4f46e5]/20 relative overflow-hidden active:scale-[0.98] transition-all group"
+                onClick={() => navigateTo(ViewState.TODAY_DETAIL)}
+                className="w-full bg-gradient-to-br from-brand-950 to-brand-900 rounded-[2.5rem] p-8 text-left shadow-2xl shadow-brand-900/20 relative overflow-hidden active:scale-[0.98] transition-all group border border-white/5"
               >
-                <div className="relative z-10 flex flex-col gap-8">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1.5">
-                      <p className="text-white/70 font-bold text-lg">Morning Activity</p>
-                      <h3 className="text-[2rem] font-black text-white leading-none tracking-tight">
-                        {activities[0]?.title || "Morning Service"}
-                      </h3>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                
+                <div className="relative z-10 flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-[2rem] font-black text-white leading-none tracking-tight mb-2">
+                      Ready to start?
+                    </h3>
+                    <p className="text-white/60 font-bold text-lg">
+                      {medsRemaining > 0 ? `There are ${medsRemaining} medications remaining.` : "All caught up on meds!"}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex flex-col items-center gap-2 border border-white/10">
+                       <Icon name="sun" size={24} className="text-orange-400" />
+                       <div className="text-center">
+                          <span className="block text-white font-black text-lg leading-none">{activities.length}</span>
+                          <span className="text-[10px] text-white/50 font-black uppercase tracking-widest">Acts</span>
+                       </div>
                     </div>
-                    <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center text-white border border-white/20 group-hover:scale-105 transition-transform">
-                        <Icon name={activities[0]?.icon || "sun"} size={36} />
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex flex-col items-center gap-2 border border-white/10">
+                       <Icon name="pill" size={24} className="text-brand-400" />
+                       <div className="text-center">
+                          <span className="block text-white font-black text-lg leading-none">{medsRemaining}</span>
+                          <span className="text-[10px] text-white/50 font-black uppercase tracking-widest">Meds</span>
+                       </div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex flex-col items-center gap-2 border border-white/10">
+                       <Icon name="stethoscope" size={24} className="text-blue-400" />
+                       <div className="text-center">
+                          <span className="block text-white font-black text-lg leading-none">{appointments.length}</span>
+                          <span className="text-[10px] text-white/50 font-black uppercase tracking-widest">Visits</span>
+                       </div>
                     </div>
                   </div>
-                  
-                  <div className="inline-flex items-center gap-2.5 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl text-white font-bold text-sm w-fit border border-white/10">
-                    <Icon name="location" size={18} className="text-white/80" />
-                    <span>{activities[0]?.location || 'Community Chapel'}</span>
+
+                  <div className="flex items-center gap-2 text-white/80 font-black text-[10px] uppercase tracking-[0.2em] mt-2">
+                     <Icon name="sparkles" size={14} className="text-yellow-400" />
+                     <span>Tap to view timeline</span>
                   </div>
                 </div>
               </button>
             </section>
 
-            {/* Categories Grid with Titles */}
+            {/* Quick Links Categories */}
             <section className="space-y-5">
-              <h3 className="text-2xl font-bold text-[#111827] ml-1">Categories</h3>
+              <h3 className="text-2xl font-bold text-[#111827] ml-1">Explore</h3>
               <div className="grid grid-cols-2 gap-4">
-                <DashboardCategoryButton 
-                  onClick={() => navigateTo(ViewState.ACTIVITIES)} 
-                  icon="sun" 
-                  label="Activities" 
-                />
-                <DashboardCategoryButton 
-                  onClick={() => navigateTo(ViewState.MEDICATIONS)} 
-                  icon="pill" 
-                  label="Medication" 
-                />
-                <DashboardCategoryButton 
-                  onClick={() => navigateTo(ViewState.APPOINTMENTS)} 
-                  icon="calendar" 
-                  label="Visits" 
-                />
-                <DashboardCategoryButton 
-                  onClick={() => navigateTo(ViewState.LIFE_360)} 
-                  icon="map" 
-                  label="Family" 
-                />
+                <DashboardCategoryButton onClick={() => navigateTo(ViewState.ACTIVITIES)} icon="sun" label="Activities" />
+                <DashboardCategoryButton onClick={() => navigateTo(ViewState.MEDICATIONS)} icon="pill" label="Medication" />
+                <DashboardCategoryButton onClick={() => navigateTo(ViewState.APPOINTMENTS)} icon="calendar" label="Visits" />
+                <DashboardCategoryButton onClick={() => navigateTo(ViewState.GAMES)} icon="gamepad" label="Training" />
               </div>
             </section>
           </div>
@@ -296,19 +338,19 @@ const App: React.FC = () => {
       case ViewState.LIFE_360:
         return <Life360 onBack={handleBack} />;
       case ViewState.ACCOUNT:
-        return <Account onBack={handleBack} onSettings={() => navigateTo(ViewState.SETTINGS)} />;
+        return <Account user={currentUser} onBack={handleBack} onSettings={() => navigateTo(ViewState.SETTINGS)} onLogout={handleLogout} />;
       case ViewState.SETTINGS:
         return <Settings onBack={handleBack} />;
       case ViewState.UPDATE_MEDICATION:
-        return selectedMedication ? <MedicationDetail medication={selectedMedication} onSave={(updated) => { setMedications(prev => prev.map(m => m.id === updated.id ? updated : m)); handleBack(); }} onDelete={(id) => { setMedications(prev => prev.filter(m => m.id !== id)); handleBack(); }} onBack={handleBack} onToggleTaken={handleToggleTaken} /> : null;
+        return selectedMedication ? <MedicationDetail medication={selectedMedication} onSave={(updated) => { setMedications(prev => prev.map(m => m.id === updated.id ? updated : m)); showSuccess('Updated successfully!', ViewState.DASHBOARD); }} onDelete={(id) => { setMedications(prev => prev.filter(m => m.id !== id)); showSuccess('Deleted successfully!', ViewState.DASHBOARD); }} onBack={handleBack} onToggleTaken={handleToggleTaken} /> : null;
       case ViewState.ADD_ACTIVITY:
-        return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', ViewState.ACTIVITIES); }} onCancel={handleBack} />;
+        return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.ADD_MEDICATION:
-        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Medication added!', ViewState.MEDICATIONS); }} onCancel={handleBack} />;
+        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Medication added!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.ADD_APPOINTMENT:
-        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Visit booked!', ViewState.APPOINTMENTS); }} onCancel={handleBack} />;
+        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Visit booked!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
-        return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', ViewState.APPOINTMENTS); }} onCancel={handleBack} /> : null;
+        return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} /> : null;
       case ViewState.TODAY_DETAIL: return <TodayDetail activities={activities} medications={sortedMedications} appointments={appointments} onBack={handleBack} onToggleMedication={handleToggleTaken} />;
       case ViewState.GAMES: return <GamesHub onBack={handleBack} />;
       case ViewState.PATIENT_PORTAL: return <PatientPortal onBack={handleBack} />;
@@ -319,43 +361,47 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#FAFBFF] overflow-hidden text-stone-900 selection:bg-brand-100">
-      <Header 
-        view={view} 
-        onMenuOpen={() => setShowMobileMenu(true)} 
-        onProfileOpen={() => navigateTo(ViewState.ACCOUNT)} 
-        onBack={handleBack}
-      />
+      {currentUser && (
+        <Header 
+          view={view} 
+          onMenuOpen={() => setShowMobileMenu(true)} 
+          onProfileOpen={() => navigateTo(ViewState.ACCOUNT)} 
+          onBack={handleBack}
+          onTitleClick={() => view === ViewState.DASHBOARD && navigateTo(ViewState.TODAY_DETAIL)}
+        />
+      )}
 
       <main 
         ref={mainScrollRef}
-        className="flex-1 overflow-y-auto no-scrollbar relative w-full max-w-md mx-auto px-6 overflow-x-hidden"
+        className={`flex-1 overflow-y-auto no-scrollbar relative w-full max-w-md mx-auto overflow-x-hidden ${currentUser ? 'px-6' : ''}`}
       >
         {renderCurrentView()}
       </main>
 
-      <nav className="w-full max-w-md mx-auto bg-white border-t border-slate-100 px-6 pt-3 pb-8 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]" aria-label="Main Navigation">
-        <div className="flex justify-between items-center relative gap-2">
-          <NavButton active={view === ViewState.DASHBOARD} onClick={() => navigateTo(ViewState.DASHBOARD)} icon="home" label="Home" />
-          <NavButton active={view === ViewState.ACTIVITIES} onClick={() => navigateTo(ViewState.ACTIVITIES)} icon="sun" label="Activities" />
-          <div className="relative">
-            <button 
-              onClick={() => setShowAssistant(true)}
-              aria-label="Open AI Voice Assistant"
-              className="w-18 h-18 -mt-16 bg-[#1A163C] rounded-full flex items-center justify-center text-white shadow-2xl shadow-brand-200/40 border-4 border-[#FAFBFF] group active:scale-90 transition-all z-20"
-            >
-              <Icon name="sparkles" size={32} className="group-hover:rotate-12 transition-transform" />
-            </button>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-brand-500 rounded-full opacity-0"></div>
+      {currentUser && (
+        <nav className="w-full max-w-md mx-auto bg-white border-t border-slate-100 px-6 pt-3 pb-8 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]" aria-label="Main Navigation">
+          <div className="flex justify-between items-center relative gap-2">
+            <NavButton active={view === ViewState.DASHBOARD} onClick={() => navigateTo(ViewState.DASHBOARD)} icon="home" label="Home" />
+            <NavButton active={view === ViewState.ACTIVITIES} onClick={() => navigateTo(ViewState.ACTIVITIES)} icon="sun" label="Activities" />
+            <div className="relative">
+              <button 
+                onClick={() => setShowAssistant(true)}
+                aria-label="Open AI Voice Assistant"
+                className="w-18 h-18 -mt-16 bg-brand-950 rounded-full flex items-center justify-center text-white shadow-2xl shadow-brand-200/40 border-4 border-[#FAFBFF] group active:scale-90 transition-all z-20"
+              >
+                <Icon name="sparkles" size={32} className="group-hover:rotate-12 transition-transform" />
+              </button>
+            </div>
+            <NavButton active={view === ViewState.MEDICATIONS} onClick={() => navigateTo(ViewState.MEDICATIONS)} icon="pill" label="Meds" />
+            <NavButton active={view === ViewState.APPOINTMENTS} onClick={() => navigateTo(ViewState.APPOINTMENTS)} icon="calendar" label="Visits" />
           </div>
-          <NavButton active={view === ViewState.MEDICATIONS} onClick={() => navigateTo(ViewState.MEDICATIONS)} icon="pill" label="Meds" />
-          <NavButton active={view === ViewState.APPOINTMENTS} onClick={() => navigateTo(ViewState.APPOINTMENTS)} icon="calendar" label="Visits" />
-        </div>
-      </nav>
+        </nav>
+      )}
 
-      {showMobileMenu && <MobileMenu isOpen={showMobileMenu} onClose={() => setShowMobileMenu(false)} onNavigate={navigateTo} currentView={view} />}
+      {showMobileMenu && <MobileMenu isOpen={showMobileMenu} user={currentUser} onClose={() => setShowMobileMenu(false)} onNavigate={navigateTo} currentView={view} onLogout={handleLogout} />}
       {showAssistant && (
         <Assistant 
-          contextData={`Elanor is viewing ${view}`} 
+          contextData={`User: ${currentUser?.firstName}, Role: ${currentUser?.role}, View: ${view}`} 
           onClose={() => setShowAssistant(false)} 
           onNavigate={(v) => navigateTo(v as ViewState)}
         />
@@ -370,7 +416,7 @@ const DashboardCategoryButton: React.FC<{ icon: string; label: string; onClick: 
     onClick={onClick}
     className="aspect-square bg-white rounded-[3rem] flex flex-col items-center justify-center gap-3 shadow-soft border border-slate-100 active:scale-95 transition-all group p-4 transform-gpu"
   >
-    <div className="text-[#4f46e5] group-hover:scale-110 transition-transform">
+    <div className="text-brand-600 group-hover:scale-110 transition-transform">
       <Icon name={icon} size={36} />
     </div>
     <span className="text-sm font-bold text-slate-700 tracking-tight leading-none">{label}</span>
@@ -383,10 +429,10 @@ const NavButton: React.FC<{ active: boolean; onClick: () => void; icon: string; 
     aria-current={active ? 'page' : undefined}
     className={`flex flex-col items-center justify-center gap-1.5 flex-1 transition-all group p-2 rounded-2xl ${active ? 'bg-slate-50/50' : ''}`}
   >
-    <div className={`transition-all relative ${active ? 'text-[#4f46e5]' : 'text-slate-400 group-hover:text-slate-600'}`}>
+    <div className={`transition-all relative ${active ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600'}`}>
       <Icon name={icon} size={28} className={active ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
     </div>
-    <span className={`text-[11px] font-bold tracking-tight ${active ? 'text-[#4f46e5]' : 'text-slate-400'}`}>{label}</span>
+    <span className={`text-[11px] font-bold tracking-tight ${active ? 'text-brand-600' : 'text-slate-400'}`}>{label}</span>
   </button>
 );
 

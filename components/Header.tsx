@@ -9,9 +9,10 @@ interface HeaderProps {
   onProfileOpen: () => void;
   onBack?: () => void;
   title?: string;
+  onTitleClick?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen, onBack, title }) => {
+export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen, onBack, title, onTitleClick }) => {
   const isHubView = [ViewState.DASHBOARD, ViewState.MEDICATIONS, ViewState.APPOINTMENTS, ViewState.LIFE_360].includes(view);
 
   const getHeaderTitle = () => {
@@ -53,13 +54,17 @@ export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen,
         )}
       </div>
       
-      <div className="text-center flex-1 min-w-0">
+      <button 
+        onClick={onTitleClick}
+        disabled={!onTitleClick}
+        className={`text-center flex-1 min-w-0 flex flex-col items-center justify-center active:scale-95 transition-transform ${onTitleClick ? 'cursor-pointer' : 'cursor-default'}`}
+      >
         {view === ViewState.DASHBOARD && <h2 className="text-stone-400 font-black uppercase tracking-[0.2em] text-[9px] mb-0.5">Oct 24</h2>}
         <div className="flex items-center gap-1.5 justify-center">
           {view === ViewState.DASHBOARD && <div className="w-1 h-1 rounded-full bg-brand-500"></div>}
           <h1 className="text-xs font-black text-stone-900 leading-none uppercase tracking-widest truncate">{getHeaderTitle()}</h1>
         </div>
-      </div>
+      </button>
 
       <div className="flex items-center gap-2.5 w-14 justify-end">
         {view !== ViewState.ACCOUNT && (
