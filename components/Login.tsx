@@ -18,16 +18,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setError(null);
     setIsLoading(true);
 
+    const lowerUsername = username.toLowerCase();
+    const lowerPassword = password.toLowerCase();
+
     // Artificial delay for realistic feel
     setTimeout(() => {
-      if (username === 'Elanor123' && password === 'password123') {
+      if (lowerUsername === 'elanor123' && lowerPassword === 'password123') {
         onLogin({
           username: 'Elanor123',
           firstName: 'Elanor',
           lastName: 'P.',
           role: 'PATIENT'
         });
-      } else if (username === 'sarah123' && password === 'password123') {
+      } else if (lowerUsername === 'sarah123' && lowerPassword === 'password123') {
         onLogin({
           username: 'sarah123',
           firstName: 'Sarah',

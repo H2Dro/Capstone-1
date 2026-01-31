@@ -24,6 +24,7 @@ import { MobileMenu } from './components/MobileMenu';
 import { Header } from './components/Header';
 import { Login } from './components/Login';
 import { CaregiverDashboard } from './components/CaregiverDashboard';
+import { PrivacySettings } from './components/PrivacySettings';
 import { useTheme } from './contexts/ThemeContext';
 
 const App: React.FC = () => {
@@ -336,11 +337,13 @@ const App: React.FC = () => {
       case ViewState.APPOINTMENTS:
         return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} />;
       case ViewState.LIFE_360:
-        return <Life360 onBack={handleBack} />;
+        return <Life360 user={currentUser} onBack={handleBack} />;
       case ViewState.ACCOUNT:
-        return <Account user={currentUser} onBack={handleBack} onSettings={() => navigateTo(ViewState.SETTINGS)} onLogout={handleLogout} />;
+        return <Account user={currentUser} onBack={handleBack} onSettings={() => navigateTo(ViewState.SETTINGS)} onPrivacy={() => navigateTo(ViewState.PRIVACY_SETTINGS)} onLogout={handleLogout} />;
       case ViewState.SETTINGS:
         return <Settings onBack={handleBack} />;
+      case ViewState.PRIVACY_SETTINGS:
+        return <PrivacySettings onBack={handleBack} />;
       case ViewState.UPDATE_MEDICATION:
         return selectedMedication ? <MedicationDetail medication={selectedMedication} onSave={(updated) => { setMedications(prev => prev.map(m => m.id === updated.id ? updated : m)); showSuccess('Updated successfully!', ViewState.DASHBOARD); }} onDelete={(id) => { setMedications(prev => prev.filter(m => m.id !== id)); showSuccess('Deleted successfully!', ViewState.DASHBOARD); }} onBack={handleBack} onToggleTaken={handleToggleTaken} /> : null;
       case ViewState.ADD_ACTIVITY:

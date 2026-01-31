@@ -33,6 +33,7 @@ import {
   Brain,
   Bone,
   Eye,
+  EyeOff,
   Smile,
   Activity,
   Trash2,
@@ -88,7 +89,10 @@ import {
   Coffee,
   Film,
   Tv,
-  Footprints
+  Footprints,
+  Lock,
+  Fingerprint,
+  Key
 } from 'lucide-react';
 
 interface IconProps {
@@ -141,6 +145,7 @@ export const Icon: React.FC<IconProps> = ({ name, size = 24, className = "" }) =
     case 'brain': return <Brain {...iconProps} />;
     case 'bone': return <Bone {...iconProps} />;
     case 'eye': return <Eye {...iconProps} />;
+    case 'eye-off': return <EyeOff {...iconProps} />;
     case 'smile': return <Smile {...iconProps} />;
     case 'activity': return <Activity {...iconProps} />;
     case 'trash': return <Trash2 {...iconProps} />;
@@ -197,6 +202,9 @@ export const Icon: React.FC<IconProps> = ({ name, size = 24, className = "" }) =
     case 'movie': return <Film {...iconProps} />;
     case 'tv': return <Tv {...iconProps} />;
     case 'walking': return <Footprints {...iconProps} />;
+    case 'lock': return <Lock {...iconProps} />;
+    case 'fingerprint': return <Fingerprint {...iconProps} />;
+    case 'key': return <Key {...iconProps} />;
     default: return <Sun {...iconProps} />;
   }
 };

@@ -7,10 +7,11 @@ interface AccountProps {
   user: User | null;
   onBack: () => void;
   onSettings: () => void;
+  onPrivacy: () => void;
   onLogout: () => void;
 }
 
-export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onLogout }) => {
+export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onPrivacy, onLogout }) => {
   const [showCaregivers, setShowCaregivers] = useState(false);
 
   const caregivers = [
@@ -167,7 +168,10 @@ export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onLo
                </div>
              )}
 
-             <button className="w-full bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-transform">
+             <button 
+               onClick={onPrivacy}
+               className="w-full bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-transform"
+             >
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors">
                       <Icon name="shield" size={20} />
