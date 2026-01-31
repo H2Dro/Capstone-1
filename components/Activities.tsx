@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from './Icon';
 import { ActivityItem } from '../types';
 
@@ -18,6 +18,22 @@ export const Activities: React.FC<ActivitiesProps> = ({
   onSelect,
   onBack 
 }) => {
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      onDelete(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const activityToDelete = activities.find(a => a.id === deleteConfirmId);
+
   return (
     <div className="flex flex-col animate-fade-in pb-32">
       {/* Header - Tightened spacing */}
@@ -69,8 +85,17 @@ export const Activities: React.FC<ActivitiesProps> = ({
                         )}
                     </div>
 
-                    <div className="w-10 h-10 flex items-center justify-center text-slate-200 group-hover:text-brand-300 transition-colors">
-                        <Icon name="chevron-right" size={20} />
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={(e) => handleDeleteClick(e, item.id)}
+                        className="w-10 h-10 flex items-center justify-center text-slate-200 hover:text-rose-500 transition-colors rounded-xl hover:bg-rose-50"
+                        aria-label="Delete activity"
+                      >
+                          <Icon name="trash" size={20} />
+                      </button>
+                      <div className="w-10 h-10 flex items-center justify-center text-slate-200 group-hover:text-brand-300 transition-colors">
+                          <Icon name="chevron-right" size={20} />
+                      </div>
                     </div>
                 </button>
             ))
@@ -102,6 +127,30 @@ export const Activities: React.FC<ActivitiesProps> = ({
             <Icon name="plus" size={28} />
          </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-md px-6 animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
+              <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-xs text-center space-y-6 shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+                  <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+                    <Icon name="trash" size={28} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-slate-900">Delete Activity?</h3>
+                    <p className="text-slate-400 font-bold text-sm leading-tight">Are you sure you want to remove "{activityToDelete?.title}" from your list?</p>
+                  </div>
+                  <div className="flex gap-3">
+                      <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-4 bg-slate-100 rounded-xl font-black text-slate-500 uppercase text-[10px] tracking-widest active:scale-95 transition-transform">Keep</button>
+                      <button 
+                        onClick={confirmDelete} 
+                        className="flex-1 py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100 active:scale-95 transition-transform"
+                      >
+                        Delete
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

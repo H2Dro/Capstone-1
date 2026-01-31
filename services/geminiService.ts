@@ -1,5 +1,4 @@
 
-
 import { GoogleGenAI, GenerateContentResponse, Type, Tool, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
 const tools: Tool[] = [
@@ -62,12 +61,10 @@ export const generateAssistantResponse = async (
   prompt: string,
   context: string
 ): Promise<AssistantResponseData> => {
-  // Guideline: Initialize GoogleGenAI right before the call and use named parameter for apiKey
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      // Guideline: Use 'gemini-3-flash-preview' for basic text-based tasks
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
@@ -86,14 +83,64 @@ export const generateAssistantResponse = async (
       },
     });
 
-    // Guideline: Access generated text via the .text property
     const modelText = response.text || "";
-    // Guideline: Access function calls via the .functionCalls property
     const toolCalls = response.functionCalls || [];
 
     return { text: modelText, toolCalls };
   } catch (error) {
     console.error("Gemini API Error:", error);
     return { text: "I'm having trouble connecting.", toolCalls: [] };
+  }
+};
+
+export interface GeneratedDoctor {
+  name: string;
+  hospital: string;
+  rating: number;
+  reviews: number;
+  bio: string;
+  gender: 'male' | 'female';
+}
+
+export const generateDoctorsForSpecialty = async (
+  specialty: string, 
+  location?: { lat: number; lng: number }
+): Promise<GeneratedDoctor[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const locationContext = location 
+    ? `located specifically near coordinates latitude ${location.lat.toFixed(4)}, longitude ${location.lng.toFixed(4)}. Please generate hospital and clinic names that sound like they belong in that specific geographic region.` 
+    : "in a general metropolitan area.";
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Generate a list of 4 realistic, high-quality doctor profiles for a senior citizen looking for a ${specialty} ${locationContext}
+      Return the data in a JSON array format. 
+      Each object must have: name, hospital, rating (float 4.5-5.0), reviews (int 50-300), bio (short sentence about their care style and empathy for seniors), gender ('male' or 'female').`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              hospital: { type: Type.STRING },
+              rating: { type: Type.NUMBER },
+              reviews: { type: Type.INTEGER },
+              bio: { type: Type.STRING },
+              gender: { type: Type.STRING, enum: ["male", "female"] }
+            },
+            required: ["name", "hospital", "rating", "reviews", "bio", "gender"]
+          }
+        }
+      }
+    });
+
+    return JSON.parse(response.text || "[]");
+  } catch (error) {
+    console.error("Failed to generate doctors", error);
+    return [];
   }
 };
