@@ -60,7 +60,6 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
     setIsGenerating(true);
     setStep('DOCTOR_SELECTION');
     
-    // Attempt to get user location for tailoring results
     let location = undefined;
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -122,7 +121,8 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
       date: `Oct ${selectedDate}`, 
       time: selectedSlot, 
       rating: selectedDoctor?.rating || 4.8, 
-      favorite: selectedDoctor?.favorite || false 
+      favorite: selectedDoctor?.favorite || false,
+      status: 'PENDING'
     });
   };
 

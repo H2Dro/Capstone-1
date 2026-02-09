@@ -16,13 +16,10 @@ export const Appointments: React.FC<AppointmentsProps> = ({
 }) => {
   return (
     <div className="flex flex-col animate-fade-in pb-24">
-      {/* Header with Title and Back logic handled by Header component usually, 
-          but if this is a standalone view we show the title here */}
       <div className="flex items-center gap-4 mb-8 pt-4">
         <h1 className="text-3xl font-bold text-[#111827]">Appointments</h1>
       </div>
 
-      {/* Appointment List */}
       <div className="space-y-6">
         {appointments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
@@ -43,15 +40,13 @@ export const Appointments: React.FC<AppointmentsProps> = ({
             appointments.map((appt) => (
                 <div 
                     key={appt.id}
-                    className="bg-white rounded-[2.5rem] p-6 shadow-soft border border-slate-50 flex flex-col gap-5 relative transition-all"
+                    className={`bg-white rounded-[2.5rem] p-6 shadow-soft border-2 flex flex-col gap-5 relative transition-all ${appt.status === 'PENDING' ? 'border-orange-100' : 'border-transparent'}`}
                 >
                     <div className="flex items-start gap-4">
-                        {/* Profile Avatar */}
                         <div className="w-16 h-16 bg-[#F1F5F9] rounded-full flex items-center justify-center text-slate-400 shrink-0">
                             <Icon name="user" size={28} />
                         </div>
 
-                        {/* Name and Basic Info */}
                         <div className="flex-1 min-w-0 pt-1">
                             <div className="flex justify-between items-start">
                                 <h4 className="font-bold text-2xl text-[#111827] leading-tight">
@@ -63,7 +58,6 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                                 </h4>
                                 
                                 <div className="flex items-center gap-3">
-                                    {/* Date Badge */}
                                     <div className="bg-[#F8FAFC] px-3 py-2 rounded-2xl flex flex-col items-center gap-0.5 border border-slate-50">
                                         <Icon name="calendar" size={14} className="text-slate-400" />
                                         <span className="text-[10px] font-black text-slate-500 uppercase leading-none">
@@ -71,7 +65,6 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                                         </span>
                                     </div>
                                     
-                                    {/* Favorite Heart */}
                                     <button className="p-1">
                                         <Icon 
                                             name="heart" 
@@ -82,12 +75,10 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                                 </div>
                             </div>
                             
-                            {/* Specialty and Hospital */}
                             <p className="text-slate-400 font-bold text-sm mt-1">
                                 {appt.specialty} <span className="mx-1 text-slate-200">|</span> {appt.hospital}
                             </p>
 
-                            {/* Rating and Time Row */}
                             <div className="flex items-center gap-6 mt-4">
                                 <div className="flex items-center gap-1.5">
                                     <Icon name="star" size={18} className="fill-[#FBBF24] text-[#FBBF24]" />
@@ -101,18 +92,23 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                         </div>
                     </div>
 
-                    {/* Reschedule Button */}
-                    <button 
-                        onClick={() => onReschedule(appt)}
-                        className="w-full py-5 bg-[#4182F9] text-white rounded-[1.25rem] font-black text-lg shadow-lg shadow-blue-100 hover:bg-[#3572E8] active:scale-[0.98] transition-all"
-                    >
-                        Reschedule
-                    </button>
+                    {appt.status === 'PENDING' ? (
+                      <div className="w-full py-4 bg-orange-50 border border-orange-100 rounded-[1.25rem] flex items-center justify-center gap-3">
+                          <Icon name="timer" size={20} className="text-orange-500" />
+                          <span className="text-sm font-black text-orange-600 uppercase tracking-widest">Awaiting Caregiver Approval</span>
+                      </div>
+                    ) : (
+                      <button 
+                          onClick={() => onReschedule(appt)}
+                          className="w-full py-5 bg-[#4182F9] text-white rounded-[1.25rem] font-black text-lg shadow-lg shadow-blue-100 hover:bg-[#3572E8] active:scale-[0.98] transition-all"
+                      >
+                          Reschedule
+                      </button>
+                    )}
                 </div>
             ))
         )}
 
-        {/* Add New Entry dashed card */}
         <button 
             onClick={onAdd}
             className="w-full h-32 rounded-[2.5rem] border-2 border-dashed border-[#CED8FF] bg-[#F9FAFF] flex items-center justify-center group active:scale-[0.98] transition-all"

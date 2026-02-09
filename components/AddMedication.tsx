@@ -149,7 +149,8 @@ export const AddMedication: React.FC<AddMedicationProps> = ({ onSave, onCancel }
       stockQuantity,
       maxQuantity: stockQuantity,
       refillThreshold,
-      doseAmount
+      doseAmount,
+      status: 'PENDING'
     });
   };
 
@@ -239,7 +240,7 @@ export const AddMedication: React.FC<AddMedicationProps> = ({ onSave, onCancel }
                                         <span className="block font-black text-stone-800">{med.name}</span>
                                         <span className="block text-[10px] font-bold text-stone-400 uppercase tracking-widest">{med.purpose}</span>
                                     </div>
-                                    <Icon name="chevron-right" size={16} className="text-stone-200 group-hover:text-brand-400" />
+                                    <Icon name="chevron-right" size={16} className="text-slate-200 group-hover:text-brand-400" />
                                 </button>
                             ))
                         ) : (

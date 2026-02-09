@@ -55,6 +55,7 @@ export interface MedicationItem {
   maxQuantity: number;
   refillThreshold: number;
   doseAmount: number; // Amount subtracted per intake
+  status: 'PENDING' | 'CONFIRMED' | 'REJECTED';
 }
 
 export interface AppointmentItem {
@@ -66,6 +67,7 @@ export interface AppointmentItem {
   time: string;
   rating: number;
   favorite?: boolean;
+  status: 'PENDING' | 'CONFIRMED' | 'REJECTED';
 }
 
 export interface ChatMessage {

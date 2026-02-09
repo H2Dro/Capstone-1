@@ -24,23 +24,28 @@ export const MOCK_ACTIVITIES: ActivityItem[] = [
 export const MOCK_MEDICATIONS: MedicationItem[] = [
   { 
     id: '1', name: 'Lisinopril', dosage: '10mg', time: '8:00 AM', taken: true, 
-    purpose: 'Blood Pressure', type: 'Tablet', stockQuantity: 24, maxQuantity: 30, refillThreshold: 5, doseAmount: 1
+    purpose: 'Blood Pressure', type: 'Tablet', stockQuantity: 24, maxQuantity: 30, refillThreshold: 5, doseAmount: 1,
+    status: 'CONFIRMED'
   },
   { 
     id: '2', name: 'Metformin', dosage: '500mg', time: '12:00 PM', taken: false, 
-    purpose: 'Diabetes', type: 'Tablet', stockQuantity: 4, maxQuantity: 60, refillThreshold: 10, doseAmount: 2
+    purpose: 'Diabetes', type: 'Tablet', stockQuantity: 4, maxQuantity: 60, refillThreshold: 10, doseAmount: 2,
+    status: 'CONFIRMED'
   },
   { 
     id: '3', name: 'Simvastatin', dosage: '20mg', time: '8:00 PM', taken: false, 
-    purpose: 'Cholesterol', type: 'Tablet', stockQuantity: 28, maxQuantity: 30, refillThreshold: 5, doseAmount: 1
+    purpose: 'Cholesterol', type: 'Tablet', stockQuantity: 28, maxQuantity: 30, refillThreshold: 5, doseAmount: 1,
+    status: 'CONFIRMED'
   },
   { 
     id: '4', name: 'Omega-3', dosage: '1000mg', time: '8:00 AM', taken: true, 
-    purpose: 'Supplements', type: 'Capsule', stockQuantity: 45, maxQuantity: 90, refillThreshold: 15, doseAmount: 1
+    purpose: 'Supplements', type: 'Capsule', stockQuantity: 45, maxQuantity: 90, refillThreshold: 15, doseAmount: 1,
+    status: 'CONFIRMED'
   },
   { 
     id: '5', name: 'Cough Syrup', dosage: '10ml', time: '9:00 PM', taken: false, 
-    purpose: 'Cold', type: 'Liquid', stockQuantity: 120, maxQuantity: 250, refillThreshold: 50, doseAmount: 10
+    purpose: 'Cold', type: 'Liquid', stockQuantity: 120, maxQuantity: 250, refillThreshold: 50, doseAmount: 10,
+    status: 'CONFIRMED'
   },
 ];
 
@@ -53,7 +58,8 @@ export const MOCK_APPOINTMENTS: AppointmentItem[] = [
     date: '5 Oct', 
     time: '10:30am - 5:30pm',
     rating: 4.8,
-    favorite: true
+    favorite: true,
+    status: 'CONFIRMED'
   },
   { 
     id: '2', 
@@ -63,7 +69,8 @@ export const MOCK_APPOINTMENTS: AppointmentItem[] = [
     date: '6 Oct', 
     time: '10:30am - 5:30pm',
     rating: 4.9,
-    favorite: false
+    favorite: false,
+    status: 'CONFIRMED'
   },
 ];
 

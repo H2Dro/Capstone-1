@@ -55,14 +55,23 @@ const App: React.FC = () => {
   }, [view]);
 
   const [activities, setActivities] = useState<ActivityItem[]>(MOCK_ACTIVITIES);
-  const [appointments, setAppointments] = useState<AppointmentItem[]>(MOCK_APPOINTMENTS);
+  
+  const [appointments, setAppointments] = useState<AppointmentItem[]>(() => {
+    const saved = localStorage.getItem('gs-appointments');
+    if (saved) return JSON.parse(saved);
+    return MOCK_APPOINTMENTS.map(a => ({ ...a, status: a.status || 'CONFIRMED' }));
+  });
+
+  useEffect(() => {
+    localStorage.setItem('gs-appointments', JSON.stringify(appointments));
+  }, [appointments]);
   
   const [medications, setMedications] = useState<MedicationItem[]>(() => {
     try {
       const saved = localStorage.getItem('gs-medications');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) return parsed.map(m => ({ ...m, status: m.status || 'CONFIRMED' }));
       }
     } catch (e) {
       console.error("Failed to parse medications", e);
@@ -70,7 +79,8 @@ const App: React.FC = () => {
     return MOCK_MEDICATIONS.map((m, i) => ({ 
         ...m, 
         color: i % 2 === 0 ? 'bg-[#FF5C73]' : 'bg-[#5B95F9]',
-        frequency: 'Daily'
+        frequency: 'Daily',
+        status: m.status || 'CONFIRMED'
     }));
   });
 
@@ -99,7 +109,7 @@ const App: React.FC = () => {
     return [...medications].sort((a, b) => parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time));
   }, [medications]);
 
-  const medsRemaining = medications.filter(m => !m.taken).length;
+  const medsRemaining = medications.filter(m => !m.taken && m.status === 'CONFIRMED').length;
 
   const handleLogin = (user: User) => {
     localStorage.setItem('gs-user', JSON.stringify(user));
@@ -139,7 +149,6 @@ const App: React.FC = () => {
     setSuccessMessage(msg);
     setTimeout(() => {
       setSuccessMessage(null);
-      // Change: Default back to Dashboard (Home) after a success action
       if (nextView) {
           navigateTo(ViewState.DASHBOARD);
       }
@@ -149,6 +158,7 @@ const App: React.FC = () => {
   const handleToggleTaken = (id: string) => {
     setMedications(prev => prev.map(m => {
       if (m.id === id) {
+        if (m.status !== 'CONFIRMED') return m;
         const isNowTaken = !m.taken;
         const newStock = isNowTaken 
           ? Math.max(0, m.stockQuantity - m.doseAmount) 
@@ -159,6 +169,26 @@ const App: React.FC = () => {
       }
       return m;
     }));
+  };
+
+  const handleApproveAppointment = (id: string) => {
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'CONFIRMED' } : a));
+    showSuccess('Appointment Approved!');
+  };
+
+  const handleDeclineAppointment = (id: string) => {
+    setAppointments(prev => prev.filter(a => a.id !== id));
+    showSuccess('Appointment Declined');
+  };
+
+  const handleApproveMedication = (id: string) => {
+    setMedications(prev => prev.map(m => m.id === id ? { ...m, status: 'CONFIRMED' } : m));
+    showSuccess('Medication Approved!');
+  };
+
+  const handleDeclineMedication = (id: string) => {
+    setMedications(prev => prev.filter(m => m.id !== id));
+    showSuccess('Medication Declined');
   };
 
   const getMedIcon = (type?: string) => {
@@ -184,6 +214,10 @@ const App: React.FC = () => {
               medications={medications}
               appointments={appointments}
               onNavigate={navigateTo}
+              onApprove={handleApproveAppointment}
+              onDecline={handleDeclineAppointment}
+              onApproveMed={handleApproveMedication}
+              onDeclineMed={handleDeclineMedication}
             />
           );
         }
@@ -243,7 +277,7 @@ const App: React.FC = () => {
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex flex-col items-center gap-2 border border-white/10">
                        <Icon name="stethoscope" size={24} className="text-blue-400" />
                        <div className="text-center">
-                          <span className="block text-white font-black text-lg leading-none">{appointments.length}</span>
+                          <span className="block text-white font-black text-lg leading-none">{appointments.filter(a => a.status === 'CONFIRMED').length}</span>
                           <span className="text-[10px] text-white/50 font-black uppercase tracking-widest">Visits</span>
                        </div>
                     </div>
@@ -302,7 +336,7 @@ const App: React.FC = () => {
                 <button 
                   key={med.id}
                   onClick={() => { setSelectedMedication(med); navigateTo(ViewState.UPDATE_MEDICATION); }}
-                  className={`flex flex-col items-center bg-white p-4 sm:p-5 rounded-[2.5rem] shadow-soft hover:shadow-card transition-all relative group border-2 ${med.taken ? 'border-brand-50 opacity-90' : 'border-transparent'}`}
+                  className={`flex flex-col items-center bg-white p-4 sm:p-5 rounded-[2.5rem] shadow-soft hover:shadow-card transition-all relative group border-2 ${med.taken ? 'border-brand-50 opacity-90' : 'border-transparent'} ${med.status === 'PENDING' ? 'opacity-70 border-orange-100' : ''}`}
                 >
                   <div className={`w-full aspect-square ${med.color || 'bg-brand-500'} rounded-[2.2rem] flex items-center justify-center relative mb-4 transition-transform group-hover:scale-[1.03]`}>
                     <div className="w-2/5 h-[58%] bg-white/95 rounded-[1.25rem] flex items-center justify-center text-stone-800 shadow-sm">
@@ -313,14 +347,28 @@ const App: React.FC = () => {
                         <Icon name="check" size={14} />
                       </div>
                     )}
+                    {med.status === 'PENDING' && (
+                      <div className="absolute inset-0 bg-white/40 flex items-center justify-center rounded-[2.2rem]">
+                         <div className="bg-orange-500 text-white p-2 rounded-full shadow-lg">
+                           <Icon name="timer" size={20} />
+                         </div>
+                      </div>
+                    )}
                   </div>
                   <div className="text-center w-full">
                     <h3 className="font-black text-lg sm:text-xl text-[#1F2B4D] leading-none mb-1.5 line-clamp-2">{med.name}</h3>
                     <p className="text-[#A1A9C1] font-bold text-xs sm:text-sm mb-3">{med.dosage}</p>
-                    <div className="inline-flex items-center gap-1.5 bg-[#F1F3FF] px-3 py-1.5 rounded-full text-[#6A7BFF] font-black text-[9px] sm:text-[10px] uppercase tracking-wider">
-                      <Icon name="clock" size={12} />
-                      <span className="whitespace-nowrap">{med.time}</span>
-                    </div>
+                    {med.status === 'PENDING' ? (
+                      <div className="inline-flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full text-orange-600 font-black text-[9px] uppercase tracking-wider">
+                        <Icon name="timer" size={12} />
+                        <span>Pending Approval</span>
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5 bg-[#F1F3FF] px-3 py-1.5 rounded-full text-[#6A7BFF] font-black text-[9px] sm:text-[10px] uppercase tracking-wider">
+                        <Icon name="clock" size={12} />
+                        <span className="whitespace-nowrap">{med.time}</span>
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}
@@ -349,12 +397,12 @@ const App: React.FC = () => {
       case ViewState.ADD_ACTIVITY:
         return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.ADD_MEDICATION:
-        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Medication added!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
+        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Request sent to Caregiver!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.ADD_APPOINTMENT:
-        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Visit booked!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
+        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
         return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} /> : null;
-      case ViewState.TODAY_DETAIL: return <TodayDetail activities={activities} medications={sortedMedications} appointments={appointments} onBack={handleBack} onToggleMedication={handleToggleTaken} />;
+      case ViewState.TODAY_DETAIL: return <TodayDetail activities={activities} medications={sortedMedications.filter(m => m.status === 'CONFIRMED')} appointments={appointments.filter(a => a.status === 'CONFIRMED')} onBack={handleBack} onToggleMedication={handleToggleTaken} />;
       case ViewState.GAMES: return <GamesHub onBack={handleBack} />;
       case ViewState.PATIENT_PORTAL: return <PatientPortal onBack={handleBack} />;
       case ViewState.INJURY_LOG: return <InjuryLog onBack={handleBack} />;
