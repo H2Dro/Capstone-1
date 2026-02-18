@@ -32,6 +32,11 @@ export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen,
     }
   };
 
+  const currentDateLabel = new Date().toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric' 
+  });
+
   return (
     <header className="flex justify-between items-center h-20 px-6 bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-stone-100 shadow-sm shrink-0">
       <div className="flex items-center gap-2.5 w-14">
@@ -59,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen,
         disabled={!onTitleClick}
         className={`text-center flex-1 min-w-0 flex flex-col items-center justify-center active:scale-95 transition-transform ${onTitleClick ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        {view === ViewState.DASHBOARD && <h2 className="text-stone-400 font-black uppercase tracking-[0.2em] text-[9px] mb-0.5">Oct 24</h2>}
+        {view === ViewState.DASHBOARD && <h2 className="text-stone-400 font-black uppercase tracking-[0.2em] text-[9px] mb-0.5">{currentDateLabel}</h2>}
         <div className="flex items-center gap-1.5 justify-center">
           {view === ViewState.DASHBOARD && <div className="w-1 h-1 rounded-full bg-brand-500"></div>}
           <h1 className="text-xs font-black text-stone-900 leading-none uppercase tracking-widest truncate">{getHeaderTitle()}</h1>

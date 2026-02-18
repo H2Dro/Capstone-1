@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Icon } from './Icon';
 import { AppointmentItem } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
@@ -51,6 +51,19 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
   const isLarge = fontSize === 'large';
   const MORNING_SLOTS = ['09:00 AM', '10:00 AM', '11:15 AM'];
   const AFTERNOON_SLOTS = ['01:00 PM', '02:30 PM', '04:00 PM'];
+  
+  const now = new Date();
+  const currentMonthName = now.toLocaleString('default', { month: 'long' });
+  const currentMonthShort = now.toLocaleString('default', { month: 'short' });
+
+  // Memoize sorted list to put favorites at the top
+  const sortedDoctorList = useMemo(() => {
+    return [...doctorList].sort((a, b) => {
+      if (a.favorite && !b.favorite) return -1;
+      if (!a.favorite && b.favorite) return 1;
+      return 0;
+    });
+  }, [doctorList]);
 
   const handleSpecialtySelect = async (spec: SpecialtyType) => {
     setSelectedSpecialtyId(spec.id);
@@ -118,7 +131,7 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
       doctorName, 
       specialty, 
       hospital, 
-      date: `Oct ${selectedDate}`, 
+      date: `${currentMonthShort} ${selectedDate}`, 
       time: selectedSlot, 
       rating: selectedDoctor?.rating || 4.8, 
       favorite: selectedDoctor?.favorite || false,
@@ -131,7 +144,7 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
     return (
       <div className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm">
         <div className="flex justify-between items-center mb-4 px-2">
-            <h3 className="font-bold text-slate-800 text-lg">October</h3>
+            <h3 className="font-bold text-slate-800 text-lg">{currentMonthName}</h3>
             <div className="flex gap-2">
                 <button className="p-1 text-slate-400"><Icon name="chevron-left" size={20} /></button>
                 <button className="p-1 text-slate-400"><Icon name="chevron-right" size={20} /></button>
@@ -181,14 +194,14 @@ export const AddAppointment: React.FC<AddAppointmentProps> = ({ onSave, onCancel
                       <div className="w-12 h-12 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin"></div>
                       <p className="text-slate-400 font-bold">Matching you with local providers...</p>
                   </div>
-                ) : doctorList.length === 0 ? (
+                ) : sortedDoctorList.length === 0 ? (
                   <div className="text-center py-10">
                     <p className="text-slate-400 font-bold">No providers found. Please try again.</p>
                   </div>
                 ) : (
-                  doctorList.map(doc => (
+                  sortedDoctorList.map(doc => (
                       <button key={doc.id} onClick={() => handleDoctorSelect(doc)} className="w-full bg-white border border-slate-100 rounded-3xl p-5 flex items-start gap-4 shadow-sm hover:border-brand-200 transition-all text-left relative group animate-fade-in">
-                          <button onClick={(e) => toggleFavorite(e, doc.id)} className="absolute top-4 right-4 p-2 rounded-full z-10 transition-transform active:scale-75"><Icon name="heart" size={24} className={doc.favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-200'} /></button>
+                          <button onClick={(e) => toggleFavorite(e, doc.id)} className="absolute top-4 right-4 p-2 rounded-full z-10 transition-transform active:scale-125"><Icon name="heart" size={24} className={doc.favorite ? 'fill-rose-500 text-rose-500' : 'text-slate-200'} /></button>
                           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-white/50 ${doc.gender === 'female' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}><Icon name="user" size={36} /></div>
                           <div className="flex-1 min-w-0 pr-6">
                               <h3 className="font-black text-slate-900 text-lg truncate mb-1">{doc.name}</h3>

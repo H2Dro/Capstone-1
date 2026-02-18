@@ -16,12 +16,16 @@ export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ ap
   const MORNING_SLOTS = ['09:00 AM', '09:30 AM', '10:00 AM', '11:15 AM', '11:45 AM'];
   const AFTERNOON_SLOTS = ['01:00 PM', '02:30 PM', '03:15 PM', '04:00 PM', '04:30 PM'];
 
+  const now = new Date();
+  const currentMonthName = now.toLocaleString('default', { month: 'long' });
+  const currentMonthShort = now.toLocaleString('default', { month: 'short' });
+
   const handleSave = () => {
     if (!selectedSlot) return;
     
     const updatedAppointment: AppointmentItem = {
       ...appointment,
-      date: `Oct ${selectedDate}`,
+      date: `${currentMonthShort} ${selectedDate}`,
       time: selectedSlot
     };
     
@@ -34,7 +38,7 @@ export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ ap
     return (
       <div className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm">
         <div className="flex justify-between items-center mb-4 px-2">
-            <h3 className="font-bold text-slate-800 text-lg">October</h3>
+            <h3 className="font-bold text-slate-800 text-lg">{currentMonthName}</h3>
             <div className="flex gap-2">
                 <button className="p-1 text-slate-400 hover:text-brand-600"><Icon name="chevron-left" size={20} /></button>
                 <button className="p-1 text-slate-400 hover:text-brand-600"><Icon name="chevron-right" size={20} /></button>

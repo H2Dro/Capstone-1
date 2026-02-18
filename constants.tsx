@@ -55,8 +55,8 @@ export const MOCK_APPOINTMENTS: AppointmentItem[] = [
     doctorName: 'Andrew Smith', 
     specialty: 'Cardiologist', 
     hospital: 'ABC Hospital',
-    date: '5 Oct', 
-    time: '10:30am - 5:30pm',
+    date: '12 Mar', 
+    time: '10:30 AM',
     rating: 4.8,
     favorite: true,
     status: 'CONFIRMED'
@@ -66,8 +66,8 @@ export const MOCK_APPOINTMENTS: AppointmentItem[] = [
     doctorName: 'Jennifer Miller', 
     specialty: 'Neurologist', 
     hospital: 'Mercy Hospital',
-    date: '6 Oct', 
-    time: '10:30am - 5:30pm',
+    date: '24 Mar', 
+    time: '02:30 PM',
     rating: 4.9,
     favorite: false,
     status: 'CONFIRMED'

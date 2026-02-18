@@ -35,12 +35,19 @@ export const CaregiverDashboard: React.FC<CaregiverDashboardProps> = ({
   const pendingMeds = medications.filter(m => m.status === 'PENDING');
   const nextAppt = confirmedAppts[0];
 
+  const getTimeOfDayGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Good Morning';
+    if (hours < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <div className="space-y-8 pb-20 animate-fade-in transform-gpu">
       {/* Header Greeting */}
       <div className="px-1 mt-2">
         <h1 className="text-[2.2rem] font-black text-slate-900 leading-[1.1] tracking-tight">
-          Hello, <span className="text-teal-600">{user.firstName}</span>
+          {getTimeOfDayGreeting()}, <span className="text-teal-600">{user.firstName}</span>
         </h1>
         <div className="flex items-center gap-2 mt-2">
            <div className="bg-teal-50 text-teal-600 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-teal-100">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Icon } from './Icon';
 import { AppointmentItem } from '../types';
 
@@ -7,13 +7,24 @@ interface AppointmentsProps {
   appointments: AppointmentItem[];
   onAdd: () => void;
   onReschedule: (appt: AppointmentItem) => void;
+  onToggleFavorite: (id: string) => void;
 }
 
 export const Appointments: React.FC<AppointmentsProps> = ({ 
   appointments, 
   onAdd, 
-  onReschedule
+  onReschedule,
+  onToggleFavorite
 }) => {
+  // Sort appointments to put favorites first
+  const sortedAppointments = useMemo(() => {
+    return [...appointments].sort((a, b) => {
+      if (a.favorite && !b.favorite) return -1;
+      if (!a.favorite && b.favorite) return 1;
+      return 0;
+    });
+  }, [appointments]);
+
   return (
     <div className="flex flex-col animate-fade-in pb-24">
       <div className="flex items-center gap-4 mb-8 pt-4">
@@ -21,7 +32,7 @@ export const Appointments: React.FC<AppointmentsProps> = ({
       </div>
 
       <div className="space-y-6">
-        {appointments.length === 0 ? (
+        {sortedAppointments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4 border-2 border-dashed border-slate-200">
                     <Icon name="calendar" size={32} />
@@ -37,7 +48,7 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                 </button>
             </div>
         ) : (
-            appointments.map((appt) => (
+            sortedAppointments.map((appt) => (
                 <div 
                     key={appt.id}
                     className={`bg-white rounded-[2.5rem] p-6 shadow-soft border-2 flex flex-col gap-5 relative transition-all ${appt.status === 'PENDING' ? 'border-orange-100' : 'border-transparent'}`}
@@ -65,11 +76,15 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                                         </span>
                                     </div>
                                     
-                                    <button className="p-1">
+                                    <button 
+                                      onClick={() => onToggleFavorite(appt.id)}
+                                      className="p-2 -m-2 active:scale-125 transition-transform hover:bg-slate-50 rounded-full"
+                                      aria-label={appt.favorite ? "Remove from favorites" : "Add to favorites"}
+                                    >
                                         <Icon 
                                             name="heart" 
                                             size={24} 
-                                            className={appt.favorite ? 'fill-[#FF5A72] text-[#FF5A72]' : 'text-slate-300'} 
+                                            className={`${appt.favorite ? 'fill-[#FF5A72] text-[#FF5A72]' : 'text-slate-300'} transition-colors`} 
                                         />
                                     </button>
                                 </div>

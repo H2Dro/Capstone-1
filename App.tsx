@@ -145,12 +145,14 @@ const App: React.FC = () => {
     }
   };
 
-  const showSuccess = (msg: string, nextView?: ViewState) => {
+  const showSuccess = (msg: string, action?: ViewState | 'BACK') => {
     setSuccessMessage(msg);
     setTimeout(() => {
       setSuccessMessage(null);
-      if (nextView) {
-          navigateTo(ViewState.DASHBOARD);
+      if (action === 'BACK') {
+        handleBack();
+      } else if (action) {
+        navigateTo(action);
       }
     }, 1200);
   };
@@ -191,6 +193,10 @@ const App: React.FC = () => {
     showSuccess('Medication Declined');
   };
 
+  const handleToggleFavoriteAppointment = (id: string) => {
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, favorite: !a.favorite } : a));
+  };
+
   const getMedIcon = (type?: string) => {
     switch(type) {
       case 'Liquid': return 'droplet';
@@ -199,6 +205,13 @@ const App: React.FC = () => {
       case 'Cream': return 'beaker';
       default: return 'pill';
     }
+  };
+
+  const getTimeOfDayGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Good Morning';
+    if (hours < 17) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
   const renderCurrentView = () => {
@@ -229,7 +242,7 @@ const App: React.FC = () => {
               className="w-full text-left px-1 mt-2 active:scale-[0.98] transition-all group"
             >
               <h1 className="text-[2.6rem] font-bold text-[#111827] leading-[1.1] tracking-tight">
-                Good Morning,<br />
+                {getTimeOfDayGreeting()},<br />
                 <span className="text-brand-600 font-bold">{currentUser.firstName}</span>
               </h1>
               <p className="text-slate-400 font-bold mt-2 flex items-center gap-1.5 group-hover:text-brand-500 transition-colors">
@@ -383,7 +396,7 @@ const App: React.FC = () => {
         );
 
       case ViewState.APPOINTMENTS:
-        return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} />;
+        return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} onToggleFavorite={handleToggleFavoriteAppointment} />;
       case ViewState.LIFE_360:
         return <Life360 user={currentUser} onBack={handleBack} />;
       case ViewState.ACCOUNT:
@@ -393,15 +406,15 @@ const App: React.FC = () => {
       case ViewState.PRIVACY_SETTINGS:
         return <PrivacySettings onBack={handleBack} />;
       case ViewState.UPDATE_MEDICATION:
-        return selectedMedication ? <MedicationDetail medication={selectedMedication} onSave={(updated) => { setMedications(prev => prev.map(m => m.id === updated.id ? updated : m)); showSuccess('Updated successfully!', ViewState.DASHBOARD); }} onDelete={(id) => { setMedications(prev => prev.filter(m => m.id !== id)); showSuccess('Deleted successfully!', ViewState.DASHBOARD); }} onBack={handleBack} onToggleTaken={handleToggleTaken} /> : null;
+        return selectedMedication ? <MedicationDetail medication={selectedMedication} onSave={(updated) => { setMedications(prev => prev.map(m => m.id === updated.id ? updated : m)); showSuccess('Updated successfully!', 'BACK'); }} onDelete={(id) => { setMedications(prev => prev.filter(m => m.id !== id)); showSuccess('Deleted successfully!', 'BACK'); }} onBack={handleBack} onToggleTaken={handleToggleTaken} /> : null;
       case ViewState.ADD_ACTIVITY:
-        return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
+        return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.ADD_MEDICATION:
-        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Request sent to Caregiver!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
+        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.ADD_APPOINTMENT:
-        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', ViewState.DASHBOARD); }} onCancel={handleBack} />;
+        return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
-        return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', ViewState.DASHBOARD); }} onCancel={handleBack} /> : null;
+        return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', 'BACK'); }} onCancel={handleBack} /> : null;
       case ViewState.TODAY_DETAIL: return <TodayDetail activities={activities} medications={sortedMedications.filter(m => m.status === 'CONFIRMED')} appointments={appointments.filter(a => a.status === 'CONFIRMED')} onBack={handleBack} onToggleMedication={handleToggleTaken} />;
       case ViewState.GAMES: return <GamesHub onBack={handleBack} />;
       case ViewState.PATIENT_PORTAL: return <PatientPortal onBack={handleBack} />;

@@ -159,6 +159,12 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
         );
     };
 
+    const currentFullDate = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
     return (
         <div className="flex flex-col animate-fade-in pb-12">
             <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6 relative overflow-hidden">
@@ -176,7 +182,7 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                 
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold text-slate-900 leading-tight mb-1">Today's<br/>Schedule</h1>
-                    <p className="text-slate-500 font-medium">Thursday, October 24</p>
+                    <p className="text-slate-500 font-medium">{currentFullDate}</p>
                 </div>
                 
                 <div className="flex gap-3 mt-6 relative z-10">

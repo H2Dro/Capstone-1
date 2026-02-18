@@ -11,17 +11,47 @@ interface AccountProps {
   onLogout: () => void;
 }
 
+interface CaregiverEntry {
+  name: string;
+  relation: string;
+  isPrimary: boolean;
+  phone: string;
+}
+
 export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onPrivacy, onLogout }) => {
   const [showCaregivers, setShowCaregivers] = useState(false);
-
-  const caregivers = [
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [caregivers, setCaregivers] = useState<CaregiverEntry[]>([
     { name: "Sarah P.", relation: "Daughter", isPrimary: true, phone: "(555) 987-6543" },
     { name: "Emily P.", relation: "Daughter", isPrimary: false, phone: "(555) 555-0199" }
-  ];
+  ]);
+
+  // Form State for new caregiver
+  const [newName, setNewName] = useState('');
+  const [newRelation, setNewRelation] = useState('Family');
+  const [newPhone, setNewPhone] = useState('');
 
   if (!user) return null;
 
   const isCaregiver = user.role === 'CAREGIVER';
+
+  const handleAddCaregiver = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName || !newPhone) return;
+
+    const newEntry: CaregiverEntry = {
+      name: newName,
+      relation: newRelation,
+      isPrimary: false,
+      phone: newPhone
+    };
+
+    setCaregivers([...caregivers, newEntry]);
+    setNewName('');
+    setNewPhone('');
+    setNewRelation('Family');
+    setShowAddModal(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] animate-fade-in flex flex-col">
@@ -163,6 +193,13 @@ export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onPr
                                    </button>
                                </div>
                            ))}
+                           <button 
+                             onClick={() => setShowAddModal(true)}
+                             className="w-full py-4 mt-2 bg-white border-2 border-dashed border-teal-200 rounded-xl text-teal-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-teal-50 transition-colors active:scale-[0.98]"
+                           >
+                             <Icon name="plus" size={18} />
+                             Add New Caregiver
+                           </button>
                       </div>
                   )}
                </div>
@@ -195,6 +232,78 @@ export const Account: React.FC<AccountProps> = ({ user, onBack, onSettings, onPr
         </div>
 
       </div>
+
+      {/* Add Caregiver Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6 animate-fade-in" onClick={() => setShowAddModal(false)}>
+          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-900">Add Caregiver</h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 bg-slate-100 rounded-full text-slate-400">
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCaregiver} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                <input 
+                  type="text" 
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 font-bold text-slate-900 focus:border-brand-500 focus:bg-white outline-none transition-all"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Relationship</label>
+                <select 
+                  value={newRelation}
+                  onChange={(e) => setNewRelation(e.target.value)}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 font-bold text-slate-900 focus:border-brand-500 focus:bg-white outline-none transition-all appearance-none"
+                >
+                  <option value="Daughter">Daughter</option>
+                  <option value="Son">Son</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Friend">Friend</option>
+                  <option value="Nurse">Nurse</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder="(555) 000-0000"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 font-bold text-slate-900 focus:border-brand-500 focus:bg-white outline-none transition-all"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-slate-500 uppercase text-[10px] tracking-widest active:scale-95 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={!newName || !newPhone}
+                  className="flex-[2] py-4 bg-teal-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-teal-100 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
+                >
+                  Send Invitation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -25,6 +25,9 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
   const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
 
   const isLarge = fontSize === 'large';
+  const now = new Date();
+  const currentMonthName = now.toLocaleString('default', { month: 'long' });
+  const currentMonthShort = now.toLocaleString('default', { month: 'short' });
 
   const ICONS = [
     { id: 'church', label: 'Church' },
@@ -55,7 +58,7 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
       title,
       icon: selectedIcon,
       time: `${hour}:${minute} ${period}`,
-      date: `Oct ${selectedDate}`
+      date: `${currentMonthShort} ${selectedDate}`
     };
     
     onSave(activity);
@@ -197,7 +200,7 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
     return (
       <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm mt-2">
         <div className="flex justify-between items-center mb-4 px-1">
-            <h3 className="font-bold text-slate-800 text-lg">October</h3>
+            <h3 className="font-bold text-slate-800 text-lg">{currentMonthName}</h3>
             <div className="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
                 <Icon name="calendar" size={18} />
             </div>
