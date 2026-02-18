@@ -10,8 +10,8 @@ interface AssistantProps {
   // AI Actions
   onNavigate?: (view: string) => void;
   onAddActivity?: (activity: any) => void;
-  onDeleteActivity?: (title: string) => void;
   onAddMedication?: (medication: any) => void;
+  onAddAppointment?: (appointment: any) => void;
 }
 
 export const Assistant: React.FC<AssistantProps> = ({ 
@@ -19,11 +19,11 @@ export const Assistant: React.FC<AssistantProps> = ({
   onClose,
   onNavigate,
   onAddActivity,
-  onDeleteActivity,
-  onAddMedication
+  onAddMedication,
+  onAddAppointment
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Hello Elanor! I can help you manage your schedule or navigate the app. What do you need?' }
+    { role: 'model', text: 'Hello! I can help you manage your schedule or navigate the app. What do you need today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +56,7 @@ export const Assistant: React.FC<AssistantProps> = ({
       // Process Tool Calls
       if (response.toolCalls && response.toolCalls.length > 0) {
         response.toolCalls.forEach(call => {
-           console.log("Executing Tool:", call.name, call.args);
+           console.log("Assistant Tool Call:", call.name, call.args);
            
            if (call.name === 'navigate_to' && onNavigate) {
               onNavigate(call.args.view);
@@ -64,21 +64,20 @@ export const Assistant: React.FC<AssistantProps> = ({
            else if (call.name === 'add_activity' && onAddActivity) {
               onAddActivity(call.args);
            }
-           else if (call.name === 'delete_activity' && onDeleteActivity) {
-              onDeleteActivity(call.args.title);
-           }
            else if (call.name === 'add_medication' && onAddMedication) {
               onAddMedication(call.args);
            }
+           else if (call.name === 'add_appointment' && onAddAppointment) {
+              onAddAppointment(call.args);
+           }
         });
         
-        // If the model invoked a tool but didn't return text (sometimes happens), add a confirmation
         if (!response.text) {
-           setMessages(prev => [...prev, { role: 'model', text: "I've updated that for you, Elanor." }]);
+           setMessages(prev => [...prev, { role: 'model', text: "I've handled that for you!" }]);
         }
       }
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'model', text: "I'm having trouble connecting to my brain right now." }]);
+      setMessages(prev => [...prev, { role: 'model', text: "I'm having a bit of trouble connecting to my brain right now." }]);
     } finally {
       setIsLoading(false);
     }
@@ -95,14 +94,14 @@ export const Assistant: React.FC<AssistantProps> = ({
         {/* Header */}
         <div className="bg-white p-4 px-6 flex justify-between items-center border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center text-white">
+            <div className="w-10 h-10 bg-brand-950 rounded-full flex items-center justify-center text-white">
                 <Icon name="sparkles" size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Companion</h2>
+              <h2 className="text-lg font-bold text-slate-900">GoodSense AI</h2>
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-xs text-slate-500 font-medium">Online</span>
+                <span className="text-xs text-slate-500 font-medium">Listening</span>
               </div>
             </div>
           </div>
@@ -111,8 +110,8 @@ export const Assistant: React.FC<AssistantProps> = ({
           </button>
         </div>
 
-        {/* Chat Area - Uses flex-1 and min-h-0 to scroll correctly regardless of font size */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 min-h-0">
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 min-h-0 no-scrollbar">
           {messages.map((msg, idx) => (
             <div
               key={idx}
@@ -152,14 +151,14 @@ export const Assistant: React.FC<AssistantProps> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Ask me anything..."
+                placeholder="Ask me to schedule something..."
                 className="flex-1 p-3 bg-transparent focus:outline-none text-slate-800 placeholder:text-slate-400 text-[1rem]"
                 />
             </div>
             <button
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
-              className="w-12 h-12 bg-brand-600 text-white rounded-full flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 disabled:bg-slate-300 transition-colors shadow-lg shadow-brand-200"
+              className="w-12 h-12 bg-brand-950 text-white rounded-full flex items-center justify-center hover:bg-black disabled:opacity-50 disabled:bg-slate-300 transition-colors shadow-lg shadow-brand-200"
             >
               <Icon name="send" size={20} className="ml-0.5" />
             </button>

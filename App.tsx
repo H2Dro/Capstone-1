@@ -26,6 +26,7 @@ import { Login } from './components/Login';
 import { CaregiverDashboard } from './components/CaregiverDashboard';
 import { PrivacySettings } from './components/PrivacySettings';
 import { useTheme } from './contexts/ThemeContext';
+import { generateActivityDescription } from './services/geminiService';
 
 const App: React.FC = () => {
   const { fontSize } = useTheme();
@@ -195,6 +196,81 @@ const App: React.FC = () => {
 
   const handleToggleFavoriteAppointment = (id: string) => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, favorite: !a.favorite } : a));
+  };
+
+  // Helper to resolve relative dates from AI
+  const resolveActivityDate = (dateStr?: string) => {
+    const today = new Date();
+    const format = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    if (!dateStr || dateStr.toLowerCase() === 'today') {
+      return format(today);
+    }
+    
+    if (dateStr.toLowerCase() === 'tomorrow') {
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      return format(tomorrow);
+    }
+
+    // Try to catch specific phrases like "next Monday" or simple string dates
+    // For now, if it's not today/tomorrow, we'll try to return the string as provided 
+    // unless it matches a standard month name.
+    return dateStr;
+  };
+
+  // Assistant Logic Implementation
+  const handleAiAddActivity = async (args: any) => {
+    // Generate description automatically based on the title
+    const description = await generateActivityDescription(args.title);
+    
+    const newActivity: ActivityItem = {
+      id: Date.now().toString(),
+      title: args.title,
+      time: args.time,
+      icon: args.icon || 'sun',
+      location: args.location || 'Home',
+      description: description,
+      date: resolveActivityDate(args.date)
+    };
+    setActivities(prev => [...prev, newActivity]);
+    showSuccess(`Activity scheduled: ${args.title}`);
+  };
+
+  const handleAiAddMedication = (args: any) => {
+    const newMed: MedicationItem = {
+      id: Date.now().toString(),
+      name: args.name,
+      dosage: args.dosage,
+      time: args.time,
+      purpose: args.purpose || 'Health',
+      type: args.type || 'Tablet',
+      taken: false,
+      color: 'bg-brand-500',
+      stockQuantity: args.stockQuantity || 30,
+      maxQuantity: args.stockQuantity || 30,
+      refillThreshold: 5,
+      doseAmount: 1,
+      frequency: args.frequency || 'Daily',
+      status: 'PENDING'
+    };
+    setMedications(prev => [...prev, newMed]);
+    showSuccess(`Request sent to Caregiver!`);
+  };
+
+  const handleAiAddAppointment = (args: any) => {
+    const newAppt: AppointmentItem = {
+      id: Date.now().toString(),
+      doctorName: args.doctorName,
+      specialty: args.specialty,
+      hospital: args.hospital || 'Local Clinic',
+      date: args.date,
+      time: args.time,
+      rating: 4.8,
+      status: 'PENDING'
+    };
+    setAppointments(prev => [...prev, newAppt]);
+    showSuccess(`Request sent to Caregiver!`);
   };
 
   const getMedIcon = (type?: string) => {
@@ -410,7 +486,7 @@ const App: React.FC = () => {
       case ViewState.ADD_ACTIVITY:
         return <AddActivity onSave={(a) => { setActivities(prev => [...prev, a]); showSuccess('Activity scheduled!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.ADD_MEDICATION:
-        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
+        return <AddMedication onSave={(m) => { setMedications(prev => [...prev, m]); showSuccess('Medication added!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.ADD_APPOINTMENT:
         return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
@@ -465,9 +541,12 @@ const App: React.FC = () => {
       {showMobileMenu && <MobileMenu isOpen={showMobileMenu} user={currentUser} onClose={() => setShowMobileMenu(false)} onNavigate={navigateTo} currentView={view} onLogout={handleLogout} />}
       {showAssistant && (
         <Assistant 
-          contextData={`User: ${currentUser?.firstName}, Role: ${currentUser?.role}, View: ${view}`} 
+          contextData={`User: ${currentUser?.firstName}, Role: ${currentUser?.role}, Current View: ${view}, Activities: ${activities.length}, Meds: ${medications.length}`} 
           onClose={() => setShowAssistant(false)} 
           onNavigate={(v) => navigateTo(v as ViewState)}
+          onAddActivity={handleAiAddActivity}
+          onAddMedication={handleAiAddMedication}
+          onAddAppointment={handleAiAddAppointment}
         />
       )}
       {successMessage && <SuccessView message={successMessage} />}

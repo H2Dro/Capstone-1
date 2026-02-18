@@ -12,7 +12,7 @@ const tools: Tool[] = [
           properties: {
             view: { 
               type: Type.STRING, 
-              description: "The target view. Options: DASHBOARD, ACTIVITIES, MEDICATIONS, APPOINTMENTS, LIFE_360, SETTINGS, ACCOUNT, INJURY_LOG, PATIENT_PORTAL" 
+              description: "The target view. Options: DASHBOARD, ACTIVITIES, MEDICATIONS, APPOINTMENTS, LIFE_360, SETTINGS, ACCOUNT, INJURY_LOG, PATIENT_PORTAL, GAMES, TODAY_DETAIL" 
             }
           },
           required: ["view"]
@@ -26,7 +26,9 @@ const tools: Tool[] = [
           properties: {
             title: { type: Type.STRING, description: "Name of the activity" },
             time: { type: Type.STRING, description: "Time of the activity (e.g., 10:00 AM)" },
-            icon: { type: Type.STRING, description: "Icon name: church, pool, cooking, gardening, exercise, art, music" }
+            date: { type: Type.STRING, description: "The date for the activity. Can be relative like 'today', 'tomorrow', 'next Monday', or a specific date like 'Oct 25'." },
+            icon: { type: Type.STRING, description: "Icon name: church, pool, cooking, gardening, exercise, art, music, dog, reading, walking, coffee" },
+            location: { type: Type.STRING, description: "Optional location name" }
           },
           required: ["title", "time"]
         }
@@ -43,9 +45,24 @@ const tools: Tool[] = [
             purpose: { type: Type.STRING, description: "What it's for" },
             type: { type: Type.STRING, description: "Form: Tablet, Capsule, Liquid, Cream" },
             stockQuantity: { type: Type.NUMBER, description: "How many pills/ml are starting in the bottle" },
-            refillThreshold: { type: Type.NUMBER, description: "When to remind the user to refill (e.g., when 5 are left)" }
+            frequency: { type: Type.STRING, description: "How often (Daily, Weekly, As Needed)" }
           },
           required: ["name", "dosage", "time"]
+        }
+      },
+      {
+        name: "add_appointment",
+        description: "Book a new medical appointment or doctor visit.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            doctorName: { type: Type.STRING, description: "Name of the doctor (e.g., Dr. Smith)" },
+            specialty: { type: Type.STRING, description: "Specialty (e.g., Cardiologist, Dentist)" },
+            hospital: { type: Type.STRING, description: "Name of the hospital or clinic" },
+            date: { type: Type.STRING, description: "Date of visit (e.g., Oct 24)" },
+            time: { type: Type.STRING, description: "Time of visit (e.g., 10:30 AM)" }
+          },
+          required: ["doctorName", "specialty", "date", "time"]
         }
       }
     ]
@@ -62,6 +79,8 @@ export const generateAssistantResponse = async (
   context: string
 ): Promise<AssistantResponseData> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
@@ -69,10 +88,18 @@ export const generateAssistantResponse = async (
       contents: prompt,
       config: {
         tools: tools,
-        systemInstruction: `You are Elanor's warm companion. You help her track her schedule and health.
+        systemInstruction: `You are Elanor's warm companion and GoodSense co-pilot. 
+        You help her manage her life by taking actions directly in the app.
         
-        Inventory tracking: You can help her check how much medication she has left. 
-        If she asks about stock, look at the current context.
+        Today is: ${todayStr}.
+        
+        Rules:
+        1. When she wants to go somewhere (e.g., "show my meds", "take me to games"), use navigate_to.
+        2. When she mentions a new pill, use add_medication.
+        3. When she mentions an activity or plan, use add_activity. If she specifies a relative time like "tomorrow", pass that exactly as the 'date' argument.
+        4. When she wants to see a doctor or has an appointment, use add_appointment.
+        5. Be empathetic and clear. Mention that medications and appointments need caregiver approval.
+        
         Current App Context: ${context}.`,
         safetySettings: [
             { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -90,6 +117,23 @@ export const generateAssistantResponse = async (
   } catch (error) {
     console.error("Gemini API Error:", error);
     return { text: "I'm having trouble connecting.", toolCalls: [] };
+  }
+};
+
+export const generateActivityDescription = async (title: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Write a very short, friendly, personal note about the following activity: "${title}". 
+      It should sound like it was written by the user themselves as a reminder or a quick thought. 
+      Do NOT sound robotic or use "I will" or "User will". 
+      Keep it to one short sentence. 
+      Example for "Walking": "Going to take a nice stroll and enjoy the fresh air today."`,
+    });
+    return response.text || "";
+  } catch (e) {
+    return "Looking forward to this activity!";
   }
 };
 

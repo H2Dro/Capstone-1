@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Icon } from './Icon';
 import { ActivityItem } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { generateActivityDescription } from '../services/geminiService';
 
 interface AddActivityProps {
   onSave: (activity: ActivityItem) => void;
@@ -13,6 +14,7 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
   const { fontSize } = useTheme();
   const [title, setTitle] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('church');
+  const [isSaving, setIsSaving] = useState(false);
   
   // Time State
   const [hour, setHour] = useState('09');
@@ -50,18 +52,24 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
     { id: 'mail', label: 'Mail' },
   ];
 
-  const handleSave = () => {
-    if (!title) return;
+  const handleSave = async () => {
+    if (!title || isSaving) return;
+    setIsSaving(true);
+    
+    // Generate a natural sounding description automatically
+    const description = await generateActivityDescription(title);
     
     const activity: ActivityItem = {
       id: Date.now().toString(),
       title,
       icon: selectedIcon,
       time: `${hour}:${minute} ${period}`,
-      date: `${currentMonthShort} ${selectedDate}`
+      date: `${currentMonthShort} ${selectedDate}`,
+      description: description
     };
     
     onSave(activity);
+    setIsSaving(false);
   };
 
   const renderIconPicker = () => (
@@ -299,14 +307,18 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 safe-area-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
         <button
             onClick={handleSave}
-            disabled={!title}
-            className={`w-full py-4 rounded-xl font-black text-lg shadow-xl transition-all ${
-                title 
+            disabled={!title || isSaving}
+            className={`w-full py-4 rounded-xl font-black text-lg shadow-xl transition-all flex items-center justify-center gap-2 ${
+                title && !isSaving
                 ? 'bg-brand-600 text-white shadow-brand-100 active:scale-[0.98]' 
                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
             }`}
         >
-            Save Activity
+            {isSaving ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              'Save Activity'
+            )}
         </button>
       </div>
 
