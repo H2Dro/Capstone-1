@@ -2,19 +2,24 @@
 import React, { useState } from 'react';
 import { Icon } from './Icon';
 import { ActivityItem } from '../types';
+import { ScheduleConflict } from '../services/schedulingService';
 
 interface ActivitiesProps {
   activities: ActivityItem[];
+  conflicts?: ScheduleConflict[];
   onAdd: () => void;
   onDelete: (id: string) => void;
+  onEdit: (activity: ActivityItem) => void;
   onSelect: (activity: ActivityItem) => void;
   onBack: () => void;
 }
 
 export const Activities: React.FC<ActivitiesProps> = ({ 
   activities, 
+  conflicts = [],
   onAdd, 
   onDelete,
+  onEdit,
   onSelect,
   onBack 
 }) => {
@@ -75,36 +80,51 @@ export const Activities: React.FC<ActivitiesProps> = ({
                 <button 
                     key={item.id}
                     onClick={() => onSelect(item)}
-                    className="w-full bg-white rounded-[2rem] p-4 border border-slate-100 shadow-soft flex items-center gap-4 group transition-all text-left active:scale-[0.98]"
+                    className={`w-full bg-white rounded-[2rem] p-4 border border-slate-100 shadow-soft flex flex-col gap-2 group transition-all text-left active:scale-[0.98] ${conflicts.some(c => c.item1.id === item.id || c.item2.id === item.id) ? 'border-orange-200' : ''}`}
                 >
-                    <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 shrink-0 border border-brand-100 group-hover:scale-105 transition-transform">
-                        <Icon name={item.icon || 'sun'} size={28} />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <Icon name="clock" size={12} className="text-brand-400" />
-                          <span className="text-brand-600 font-black text-[10px] uppercase tracking-wider">{item.time}</span>
-                        </div>
-                        <h4 className="font-extrabold text-xl text-slate-900 leading-tight truncate">{item.title}</h4>
-                        {item.date && (
-                            <span className="text-slate-400 font-bold text-[10px] uppercase mt-1 block">
-                                {item.date}
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={(e) => handleDeleteClick(e, item.id)}
-                        className="w-10 h-10 flex items-center justify-center text-slate-200 hover:text-rose-500 transition-colors rounded-xl hover:bg-rose-50"
-                        aria-label="Delete activity"
-                      >
-                          <Icon name="trash" size={20} />
-                      </button>
-                      <div className="w-10 h-10 flex items-center justify-center text-slate-200 group-hover:text-brand-300 transition-colors">
-                          <Icon name="chevron-right" size={20} />
+                    {conflicts.some(c => c.item1.id === item.id || c.item2.id === item.id) && (
+                      <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1.5 rounded-xl border border-orange-100">
+                        <Icon name="alert" size={14} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Schedule Conflict</span>
                       </div>
+                    )}
+                    <div className="flex items-center gap-4 w-full">
+                        <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 shrink-0 border border-brand-100 group-hover:scale-105 transition-transform">
+                            <Icon name={item.icon || 'sun'} size={28} />
+                        </div>
+                    
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Icon name="clock" size={12} className="text-brand-400" />
+                              <span className="text-brand-600 font-black text-[10px] uppercase tracking-wider">{item.time}</span>
+                            </div>
+                            <h4 className="font-extrabold text-xl text-slate-900 leading-tight truncate">{item.title}</h4>
+                            {item.date && (
+                                <span className="text-slate-400 font-bold text-[10px] uppercase mt-1 block">
+                                    {item.date}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                            className="w-10 h-10 flex items-center justify-center text-slate-200 hover:text-brand-500 transition-colors rounded-xl hover:bg-brand-50"
+                            aria-label="Edit activity"
+                          >
+                              <Icon name="edit" size={18} />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDeleteClick(e, item.id)}
+                            className="w-10 h-10 flex items-center justify-center text-slate-200 hover:text-rose-500 transition-colors rounded-xl hover:bg-rose-50"
+                            aria-label="Delete activity"
+                          >
+                              <Icon name="trash" size={20} />
+                          </button>
+                          <div className="w-10 h-10 flex items-center justify-center text-slate-200 group-hover:text-brand-300 transition-colors">
+                              <Icon name="chevron-right" size={20} />
+                          </div>
+                        </div>
                     </div>
                 </button>
             ))

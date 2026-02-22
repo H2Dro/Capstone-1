@@ -27,6 +27,8 @@ import { CaregiverDashboard } from './components/CaregiverDashboard';
 import { PrivacySettings } from './components/PrivacySettings';
 import { useTheme } from './contexts/ThemeContext';
 import { generateActivityDescription } from './services/geminiService';
+import { fetchWeather, getCurrentLocation, WeatherData } from './services/weatherService';
+import { checkConflicts } from './services/schedulingService';
 
 const App: React.FC = () => {
   const { fontSize } = useTheme();
@@ -36,6 +38,23 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('gs-user');
     return saved ? JSON.parse(saved) : null;
   });
+
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  useEffect(() => {
+    const loadWeather = async () => {
+      try {
+        // Downtown Salt Lake City coordinates
+        const SLC_LAT = 40.7608;
+        const SLC_LON = -111.8910;
+        const data = await fetchWeather(SLC_LAT, SLC_LON);
+        setWeather(data);
+      } catch (err) {
+        console.error('Failed to fetch weather for SLC', err);
+      }
+    };
+    loadWeather();
+  }, []);
 
   const [view, setView] = useState<ViewState>(() => {
     const saved = localStorage.getItem('gs-user');
@@ -62,6 +81,8 @@ const App: React.FC = () => {
     if (saved) return JSON.parse(saved);
     return MOCK_APPOINTMENTS.map(a => ({ ...a, status: a.status || 'CONFIRMED' }));
   });
+
+  const conflicts = useMemo(() => checkConflicts(activities, appointments), [activities, appointments]);
 
   useEffect(() => {
     localStorage.setItem('gs-appointments', JSON.stringify(appointments));
@@ -302,6 +323,8 @@ const App: React.FC = () => {
               activities={activities}
               medications={medications}
               appointments={appointments}
+              weather={weather}
+              conflicts={conflicts}
               onNavigate={navigateTo}
               onApprove={handleApproveAppointment}
               onDecline={handleDeclineAppointment}
@@ -321,13 +344,36 @@ const App: React.FC = () => {
                 {getTimeOfDayGreeting()},<br />
                 <span className="text-brand-600 font-bold">{currentUser.firstName}</span>
               </h1>
-              <p className="text-slate-400 font-bold mt-2 flex items-center gap-1.5 group-hover:text-brand-500 transition-colors">
-                View your schedule <Icon name="chevron-right" size={16} />
-              </p>
+              <div className="flex items-center gap-4 mt-3">
+                <p className="text-slate-400 font-bold flex items-center gap-1.5 group-hover:text-brand-500 transition-colors">
+                  View your schedule <Icon name="chevron-right" size={16} />
+                </p>
+                {weather && (
+                  <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full border border-blue-100 animate-fade-in">
+                    <Icon name={weather.icon} size={16} />
+                    <span className="text-xs font-bold">{weather.temperature}°F • {weather.condition}</span>
+                  </div>
+                )}
+              </div>
             </button>
 
             {/* Daily Summary Hero Card */}
             <section className="space-y-4">
+              {conflicts.length > 0 && (
+                <div className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-6 flex items-start gap-4 animate-pop">
+                  <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center shrink-0">
+                    <Icon name="alert" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-orange-900 leading-tight">Schedule Conflict Detected</h4>
+                    <p className="text-orange-700 font-bold text-sm mt-1">
+                      You have {conflicts.length} overlapping {conflicts.length === 1 ? 'event' : 'events'}. 
+                      Check your schedule to resolve.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-2xl font-bold text-[#111827]">Today at a Glance</h3>
               </div>
@@ -397,8 +443,13 @@ const App: React.FC = () => {
         return (
           <Activities 
             activities={activities} 
+            conflicts={conflicts}
             onAdd={() => navigateTo(ViewState.ADD_ACTIVITY)} 
             onDelete={(id) => setActivities(prev => prev.filter(a => a.id !== id))} 
+            onEdit={(activity) => {
+              setSelectedActivity(activity);
+              navigateTo(ViewState.EDIT_ACTIVITY);
+            }}
             onSelect={(activity) => {
                setSelectedActivity(activity);
                navigateTo(ViewState.ACTIVITY_DETAIL);
@@ -413,6 +464,23 @@ const App: React.FC = () => {
             activity={selectedActivity} 
             onBack={handleBack} 
             onDelete={(id) => setActivities(prev => prev.filter(a => a.id !== id))}
+            onEdit={(activity) => {
+              setSelectedActivity(activity);
+              navigateTo(ViewState.EDIT_ACTIVITY);
+            }}
+          />
+        ) : null;
+
+      case ViewState.EDIT_ACTIVITY:
+        return selectedActivity ? (
+          <AddActivity 
+            activity={selectedActivity}
+            onSave={(updated) => {
+              setActivities(prev => prev.map(a => a.id === updated.id ? updated : a));
+              setSelectedActivity(updated);
+              showSuccess('Activity updated!', 'BACK');
+            }}
+            onCancel={handleBack}
           />
         ) : null;
 
@@ -480,7 +548,7 @@ const App: React.FC = () => {
         );
 
       case ViewState.APPOINTMENTS:
-        return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} onToggleFavorite={handleToggleFavoriteAppointment} onBack={handleBack} />;
+        return <Appointments appointments={appointments} conflicts={conflicts} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} onToggleFavorite={handleToggleFavoriteAppointment} onBack={handleBack} />;
       case ViewState.LIFE_360:
         return <Life360 user={currentUser} onBack={handleBack} />;
       case ViewState.ACCOUNT:
@@ -505,6 +573,7 @@ const App: React.FC = () => {
             activities={activities} 
             medications={sortedMedications.filter(m => m.status === 'CONFIRMED')} 
             appointments={appointments.filter(a => a.status === 'CONFIRMED')} 
+            conflicts={conflicts}
             onBack={handleBack} 
             onToggleMedication={handleToggleTaken} 
             onNavigateToMeds={() => navigateTo(ViewState.MEDICATIONS)}

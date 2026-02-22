@@ -1,12 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 import { ActivityItem, MedicationItem, AppointmentItem } from '../types';
+import { fetchWeather, getCurrentLocation, WeatherData } from '../services/weatherService';
+import { ScheduleConflict } from '../services/schedulingService';
 
 interface TodayDetailProps {
   activities: ActivityItem[];
   medications: MedicationItem[];
   appointments: AppointmentItem[];
+  conflicts?: ScheduleConflict[];
   onBack: () => void;
   onToggleMedication: (id: string) => void;
   onNavigateToMeds?: () => void;
@@ -29,11 +32,29 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
     activities, 
     medications, 
     appointments, 
+    conflicts = [],
     onBack,
     onToggleMedication,
     onNavigateToMeds,
     onNavigateToActivities
 }) => {
+    const [weather, setWeather] = useState<WeatherData | null>(null);
+
+    useEffect(() => {
+        const loadWeather = async () => {
+            try {
+                // Downtown Salt Lake City coordinates
+                const SLC_LAT = 40.7608;
+                const SLC_LON = -111.8910;
+                const data = await fetchWeather(SLC_LAT, SLC_LON);
+                setWeather(data);
+            } catch (err) {
+                console.error('Failed to fetch weather for SLC', err);
+            }
+        };
+        loadWeather();
+    }, []);
+
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         'Morning': false,
         'Afternoon': false,
@@ -145,6 +166,12 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                                         if (item.type === 'medication') onToggleMedication(item.id);
                                     }}
                                 >
+                                    {conflicts.some(c => c.item1.id === item.id || c.item2.id === item.id) && (
+                                      <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-3 py-1.5 rounded-xl border border-orange-100 mb-1">
+                                        <Icon name="alert" size={14} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Schedule Conflict</span>
+                                      </div>
+                                    )}
                                     <div className="flex justify-between items-start">
                                         <div className="flex gap-3 items-center">
                                             <div className={`p-2.5 rounded-xl ${item.color}`}>
@@ -201,8 +228,8 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                         <Icon name="back" size={24} />
                     </button>
                     <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full border border-blue-100">
-                         <Icon name="cloud-sun" size={16} />
-                         <span className="text-xs font-bold">68°F</span>
+                         <Icon name={weather?.icon || "cloud-sun"} size={16} />
+                         <span className="text-xs font-bold">{weather ? `${weather.temperature}°F` : '--°F'}</span>
                     </div>
                 </div>
                 

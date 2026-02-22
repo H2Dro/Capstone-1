@@ -8,23 +8,51 @@ import { generateActivityDescription } from '../services/geminiService';
 interface AddActivityProps {
   onSave: (activity: ActivityItem) => void;
   onCancel: () => void;
+  activity?: ActivityItem;
 }
 
-export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) => {
+export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel, activity }) => {
   const { fontSize } = useTheme();
-  const [title, setTitle] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('church');
+  const [title, setTitle] = useState(activity?.title || '');
+  const [selectedIcon, setSelectedIcon] = useState(activity?.icon || 'church');
   const [isSaving, setIsSaving] = useState(false);
   
   // Time State
-  const [hour, setHour] = useState('09');
-  const [minute, setMinute] = useState('00');
-  const [period, setPeriod] = useState('AM');
+  const [hour, setHour] = useState(() => {
+    if (activity?.time) {
+      const [h] = activity.time.split(':');
+      return h.padStart(2, '0');
+    }
+    return '09';
+  });
+  const [minute, setMinute] = useState(() => {
+    if (activity?.time) {
+      const [, mPart] = activity.time.split(':');
+      const [m] = mPart.split(' ');
+      return m.padStart(2, '0');
+    }
+    return '00';
+  });
+  const [period, setPeriod] = useState(() => {
+    if (activity?.time) {
+      const [, mPart] = activity.time.split(':');
+      const [, p] = mPart.split(' ');
+      return p || 'AM';
+    }
+    return 'AM';
+  });
   
   // UI State
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
+  const [selectedDate, setSelectedDate] = useState<number>(() => {
+    if (activity?.date) {
+      const parts = activity.date.split(' ');
+      const d = parseInt(parts[1], 10);
+      return isNaN(d) ? new Date().getDate() : d;
+    }
+    return new Date().getDate();
+  });
 
   const isLarge = fontSize === 'large';
   const now = new Date();
@@ -57,10 +85,13 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
     setIsSaving(true);
     
     // Generate a natural sounding description automatically
-    const description = await generateActivityDescription(title);
+    const description = (activity?.title === title && activity?.description) 
+      ? activity.description 
+      : await generateActivityDescription(title);
     
-    const activity: ActivityItem = {
-      id: Date.now().toString(),
+    const newActivity: ActivityItem = {
+      ...activity,
+      id: activity?.id || Date.now().toString(),
       title,
       icon: selectedIcon,
       time: `${hour}:${minute} ${period}`,
@@ -68,7 +99,7 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
       description: description
     };
     
-    onSave(activity);
+    onSave(newActivity);
     setIsSaving(false);
   };
 
@@ -245,7 +276,9 @@ export const AddActivity: React.FC<AddActivityProps> = ({ onSave, onCancel }) =>
         <button onClick={onCancel} className="p-1 -ml-1 text-slate-400 hover:text-slate-600">
           <Icon name="back" size={24} />
         </button>
-        <h1 className="text-lg font-black text-slate-900 uppercase tracking-widest">New Activity</h1>
+        <h1 className="text-lg font-black text-slate-900 uppercase tracking-widest">
+          {activity ? 'Edit Activity' : 'New Activity'}
+        </h1>
         <div className="w-8" />
       </div>
 

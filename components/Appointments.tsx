@@ -2,9 +2,11 @@
 import React, { useMemo } from 'react';
 import { Icon } from './Icon';
 import { AppointmentItem } from '../types';
+import { ScheduleConflict } from '../services/schedulingService';
 
 interface AppointmentsProps {
   appointments: AppointmentItem[];
+  conflicts?: ScheduleConflict[];
   onAdd: () => void;
   onReschedule: (appt: AppointmentItem) => void;
   onToggleFavorite: (id: string) => void;
@@ -13,6 +15,7 @@ interface AppointmentsProps {
 
 export const Appointments: React.FC<AppointmentsProps> = ({ 
   appointments, 
+  conflicts = [],
   onAdd, 
   onReschedule,
   onToggleFavorite,
@@ -67,6 +70,12 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                     key={appt.id}
                     className={`bg-white rounded-[2.5rem] p-6 shadow-soft border-2 flex flex-col gap-5 relative transition-all ${appt.status === 'PENDING' ? 'border-orange-100' : 'border-transparent'}`}
                 >
+                    {conflicts.some(c => c.item1.id === appt.id || c.item2.id === appt.id) && (
+                      <div className="flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-2 rounded-2xl border border-orange-100">
+                        <Icon name="alert" size={16} />
+                        <span className="text-xs font-black uppercase tracking-widest">Schedule Conflict</span>
+                      </div>
+                    )}
                     <div className="flex items-start gap-4">
                         <div className="w-16 h-16 bg-[#F1F5F9] rounded-full flex items-center justify-center text-slate-400 shrink-0">
                             <Icon name="user" size={28} />

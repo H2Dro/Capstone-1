@@ -7,9 +7,10 @@ interface ActivityDetailProps {
   activity: ActivityItem;
   onBack: () => void;
   onDelete: (id: string) => void;
+  onEdit: (activity: ActivityItem) => void;
 }
 
-export const ActivityDetail: React.FC<ActivityDetailProps> = ({ activity, onBack, onDelete }) => {
+export const ActivityDetail: React.FC<ActivityDetailProps> = ({ activity, onBack, onDelete, onEdit }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
@@ -25,12 +26,21 @@ export const ActivityDetail: React.FC<ActivityDetailProps> = ({ activity, onBack
         >
           <Icon name="back" size={20} />
         </button>
-        <button 
-          onClick={() => setShowDeleteConfirm(true)}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/60 border border-white/10 active:scale-95 transition-all"
-        >
-          <Icon name="trash" size={18} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => onEdit(activity)}
+            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20 active:scale-95 transition-all"
+            aria-label="Edit activity"
+          >
+            <Icon name="edit" size={18} />
+          </button>
+          <button 
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/60 border border-white/10 active:scale-95 transition-all"
+          >
+            <Icon name="trash" size={18} />
+          </button>
+        </div>
       </header>
 
       {/* Hero Section */}

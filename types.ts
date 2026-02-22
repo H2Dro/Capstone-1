@@ -5,6 +5,7 @@ export enum ViewState {
   ACTIVITIES = 'ACTIVITIES',
   ADD_ACTIVITY = 'ADD_ACTIVITY',
   ACTIVITY_DETAIL = 'ACTIVITY_DETAIL',
+  EDIT_ACTIVITY = 'EDIT_ACTIVITY',
   MEDICATIONS = 'MEDICATIONS',
   ADD_MEDICATION = 'ADD_MEDICATION',
   UPDATE_MEDICATION = 'UPDATE_MEDICATION',
@@ -37,6 +38,7 @@ export interface ActivityItem {
   time: string;
   icon: string;
   date?: string;
+  duration?: number; // in minutes
   description?: string;
   location?: string;
 }
@@ -65,6 +67,7 @@ export interface AppointmentItem {
   hospital: string;
   date: string;
   time: string;
+  duration?: number; // in minutes
   rating: number;
   favorite?: boolean;
   status: 'PENDING' | 'CONFIRMED' | 'REJECTED';

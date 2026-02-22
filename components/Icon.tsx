@@ -58,6 +58,8 @@ import {
   Zap,
   Navigation,
   Car,
+  Cloud,
+  CloudSnow,
   CloudSun,
   Sunset,
   Sunrise,
@@ -171,6 +173,8 @@ export const Icon: React.FC<IconProps> = ({ name, size = 24, className = "" }) =
     case 'navigation': return <Navigation {...iconProps} />;
     case 'car': return <Car {...iconProps} />;
     case 'cloud-sun': return <CloudSun {...iconProps} />;
+    case 'cloud': return <Cloud {...iconProps} />;
+    case 'cloud-snow': return <CloudSnow {...iconProps} />;
     case 'sunset': return <Sunset {...iconProps} />;
     case 'sunrise': return <Sunrise {...iconProps} />;
     case 'gamepad': return <Gamepad2 {...iconProps} />;

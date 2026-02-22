@@ -2,12 +2,16 @@
 import React from 'react';
 import { Icon } from './Icon';
 import { ViewState, ActivityItem, MedicationItem, AppointmentItem, User } from '../types';
+import { WeatherData } from '../services/weatherService';
+import { ScheduleConflict } from '../services/schedulingService';
 
 interface CaregiverDashboardProps {
   user: User;
   activities: ActivityItem[];
   medications: MedicationItem[];
   appointments: AppointmentItem[];
+  weather?: WeatherData | null;
+  conflicts?: ScheduleConflict[];
   onNavigate: (view: ViewState) => void;
   onApprove: (id: string) => void;
   onDecline: (id: string) => void;
@@ -20,6 +24,8 @@ export const CaregiverDashboard: React.FC<CaregiverDashboardProps> = ({
   activities, 
   medications, 
   appointments, 
+  weather,
+  conflicts = [],
   onNavigate,
   onApprove,
   onDecline,
@@ -54,11 +60,32 @@ export const CaregiverDashboard: React.FC<CaregiverDashboardProps> = ({
              Primary Caregiver
            </div>
            <p className="text-slate-400 font-bold text-sm">Monitoring Elanor P.</p>
+           {weather && (
+             <div className="flex items-center gap-1.5 ml-auto bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg border border-blue-100 animate-fade-in">
+               <Icon name={weather.icon} size={14} />
+               <span className="text-[10px] font-black">{weather.temperature}°F</span>
+             </div>
+           )}
         </div>
       </div>
 
       {/* Well-being Hero Card */}
-      <section>
+      <section className="space-y-6">
+        {conflicts.length > 0 && (
+          <div className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-6 flex items-start gap-4 animate-pop">
+            <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center shrink-0">
+              <Icon name="alert" size={24} />
+            </div>
+            <div>
+              <h4 className="font-black text-orange-900 leading-tight">Schedule Conflict Detected</h4>
+              <p className="text-orange-700 font-bold text-sm mt-1">
+                Elanor has {conflicts.length} overlapping {conflicts.length === 1 ? 'event' : 'events'} today. 
+                Please review and adjust the schedule.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gradient-to-br from-teal-950 to-slate-900 rounded-[2.5rem] p-8 text-left shadow-2xl shadow-teal-900/10 relative overflow-hidden border border-white/5">
           <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
           
