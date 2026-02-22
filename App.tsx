@@ -419,7 +419,21 @@ const App: React.FC = () => {
       case ViewState.MEDICATIONS:
         return (
           <section className="animate-fade-in pt-6 pb-20 max-w-sm mx-auto transform-gpu">
-            <h2 className="text-center text-3xl font-black text-[#1F2B4D] mb-8 leading-tight">Daily Medications</h2>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <button onClick={handleBack} className="w-12 h-12 bg-white rounded-2xl shadow-soft border border-slate-100 flex items-center justify-center text-slate-400 active:scale-90 transition-transform">
+                  <Icon name="back" size={24} />
+                </button>
+                <h2 className="text-3xl font-black text-[#1F2B4D] leading-none">Medications</h2>
+              </div>
+              <button 
+                onClick={() => navigateTo(ViewState.ADD_MEDICATION)} 
+                className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"
+                aria-label="Add medication"
+              >
+                <Icon name="plus" size={20} />
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-6 px-1">
               {sortedMedications.map(med => (
                 <button 
@@ -461,18 +475,12 @@ const App: React.FC = () => {
                   </div>
                 </button>
               ))}
-              <button onClick={() => navigateTo(ViewState.ADD_MEDICATION)} className="flex flex-col items-center justify-center bg-[#F9FAFF] min-h-[14rem] rounded-[2.5rem] border-2 border-dashed border-[#CED8FF] transition-all hover:bg-[#F1F4FF] group active:scale-95">
-                <div className="w-[4.5rem] h-[4.5rem] bg-[#E6EBFF] rounded-full flex items-center justify-center text-[#6A7BFF] mb-4 group-hover:scale-110 transition-transform shadow-sm">
-                  <Icon name="plus" size={32} />
-                </div>
-                <span className="font-black text-[#8EA0FF] text-base sm:text-lg uppercase tracking-wider">Add New</span>
-              </button>
             </div>
           </section>
         );
 
       case ViewState.APPOINTMENTS:
-        return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} onToggleFavorite={handleToggleFavoriteAppointment} />;
+        return <Appointments appointments={appointments} onAdd={() => navigateTo(ViewState.ADD_APPOINTMENT)} onReschedule={(appt) => { setSelectedAppointment(appt); navigateTo(ViewState.RESCHEDULE_APPOINTMENT); }} onToggleFavorite={handleToggleFavoriteAppointment} onBack={handleBack} />;
       case ViewState.LIFE_360:
         return <Life360 user={currentUser} onBack={handleBack} />;
       case ViewState.ACCOUNT:
@@ -491,7 +499,18 @@ const App: React.FC = () => {
         return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
         return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', 'BACK'); }} onCancel={handleBack} /> : null;
-      case ViewState.TODAY_DETAIL: return <TodayDetail activities={activities} medications={sortedMedications.filter(m => m.status === 'CONFIRMED')} appointments={appointments.filter(a => a.status === 'CONFIRMED')} onBack={handleBack} onToggleMedication={handleToggleTaken} />;
+      case ViewState.TODAY_DETAIL: 
+        return (
+          <TodayDetail 
+            activities={activities} 
+            medications={sortedMedications.filter(m => m.status === 'CONFIRMED')} 
+            appointments={appointments.filter(a => a.status === 'CONFIRMED')} 
+            onBack={handleBack} 
+            onToggleMedication={handleToggleTaken} 
+            onNavigateToMeds={() => navigateTo(ViewState.MEDICATIONS)}
+            onNavigateToActivities={() => navigateTo(ViewState.ACTIVITIES)}
+          />
+        );
       case ViewState.GAMES: return <GamesHub onBack={handleBack} />;
       case ViewState.PATIENT_PORTAL: return <PatientPortal onBack={handleBack} />;
       case ViewState.INJURY_LOG: return <InjuryLog onBack={handleBack} />;

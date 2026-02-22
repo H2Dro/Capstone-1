@@ -8,13 +8,15 @@ interface AppointmentsProps {
   onAdd: () => void;
   onReschedule: (appt: AppointmentItem) => void;
   onToggleFavorite: (id: string) => void;
+  onBack: () => void;
 }
 
 export const Appointments: React.FC<AppointmentsProps> = ({ 
   appointments, 
   onAdd, 
   onReschedule,
-  onToggleFavorite
+  onToggleFavorite,
+  onBack
 }) => {
   // Sort appointments to put favorites first
   const sortedAppointments = useMemo(() => {
@@ -27,8 +29,20 @@ export const Appointments: React.FC<AppointmentsProps> = ({
 
   return (
     <div className="flex flex-col animate-fade-in pb-24">
-      <div className="flex items-center gap-4 mb-8 pt-4">
-        <h1 className="text-3xl font-bold text-[#111827]">Appointments</h1>
+      <div className="flex items-center justify-between mb-8 pt-4">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="w-12 h-12 bg-white rounded-2xl shadow-soft border border-slate-100 flex items-center justify-center text-slate-400 active:scale-90 transition-transform">
+              <Icon name="back" size={24} />
+          </button>
+          <h1 className="text-3xl font-bold text-[#111827]">Appointments</h1>
+        </div>
+        <button 
+          onClick={onAdd} 
+          className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"
+          aria-label="Add appointment"
+        >
+          <Icon name="plus" size={20} />
+        </button>
       </div>
 
       <div className="space-y-6">
@@ -123,15 +137,6 @@ export const Appointments: React.FC<AppointmentsProps> = ({
                 </div>
             ))
         )}
-
-        <button 
-            onClick={onAdd}
-            className="w-full h-32 rounded-[2.5rem] border-2 border-dashed border-[#CED8FF] bg-[#F9FAFF] flex items-center justify-center group active:scale-[0.98] transition-all"
-        >
-            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#4182F9] shadow-sm group-hover:scale-110 transition-transform">
-                <Icon name="plus" size={28} />
-            </div>
-        </button>
       </div>
     </div>
   );

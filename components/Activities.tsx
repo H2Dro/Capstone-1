@@ -37,11 +37,20 @@ export const Activities: React.FC<ActivitiesProps> = ({
   return (
     <div className="flex flex-col animate-fade-in pb-32">
       {/* Header - Tightened spacing */}
-      <div className="flex items-center gap-3 mb-6 pt-2">
-        <button onClick={onBack} className="w-12 h-12 bg-white rounded-2xl shadow-soft border border-slate-100 flex items-center justify-center text-slate-400 active:scale-90 transition-transform">
-            <Icon name="back" size={24} />
+      <div className="flex items-center justify-between mb-6 pt-2">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="w-12 h-12 bg-white rounded-2xl shadow-soft border border-slate-100 flex items-center justify-center text-slate-400 active:scale-90 transition-transform">
+              <Icon name="back" size={24} />
+          </button>
+          <h1 className="text-3xl font-black text-slate-900 leading-none">Activities</h1>
+        </div>
+        <button 
+          onClick={onAdd} 
+          className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all"
+          aria-label="Add activity"
+        >
+          <Icon name="plus" size={20} />
         </button>
-        <h1 className="text-3xl font-black text-slate-900 leading-none">Activities</h1>
       </div>
 
       {/* List */}
@@ -117,16 +126,6 @@ export const Activities: React.FC<ActivitiesProps> = ({
               </div>
           </div>
       )}
-
-      {/* Floating Add Button - Adjusted position */}
-      <div className="fixed bottom-28 right-6">
-         <button 
-           onClick={onAdd}
-           className="w-14 h-14 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-2xl shadow-brand-200 border-4 border-white active:scale-90 transition-all z-20"
-         >
-            <Icon name="plus" size={28} />
-         </button>
-      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (

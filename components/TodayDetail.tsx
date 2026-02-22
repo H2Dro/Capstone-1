@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from './Icon';
 import { ActivityItem, MedicationItem, AppointmentItem } from '../types';
 
@@ -9,6 +9,8 @@ interface TodayDetailProps {
   appointments: AppointmentItem[];
   onBack: () => void;
   onToggleMedication: (id: string) => void;
+  onNavigateToMeds?: () => void;
+  onNavigateToActivities?: () => void;
 }
 
 type TimelineItem = {
@@ -28,8 +30,22 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
     medications, 
     appointments, 
     onBack,
-    onToggleMedication
+    onToggleMedication,
+    onNavigateToMeds,
+    onNavigateToActivities
 }) => {
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+        'Morning': false,
+        'Afternoon': false,
+        'Evening': false
+    });
+
+    const toggleSection = (title: string) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [title]: !prev[title]
+        }));
+    };
     
     // Helper to parse time string to minutes for sorting
     const parseTime = (timeStr: string) => {
@@ -90,71 +106,81 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
     const eveningItems = timelineItems.filter(i => i.sortTime >= 1020); // After 5 PM
 
     const renderSection = (title: string, items: TimelineItem[], icon: string, headerColor: string) => {
+        const isOpen = expandedSections[title];
+        
         return (
             <div className="w-full">
-                <div className={`flex items-center justify-between p-4 rounded-2xl ${headerColor} border border-white/50 backdrop-blur-sm mb-3 sticky top-2 z-10 shadow-sm`}>
+                <button 
+                    onClick={() => toggleSection(title)}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl ${headerColor} border border-white/50 backdrop-blur-sm mb-3 sticky top-2 z-10 shadow-sm transition-all active:scale-[0.98]`}
+                >
                     <div className="flex items-center gap-3">
                         <div className="bg-white/60 p-2 rounded-xl">
                             <Icon name={icon} size={20} className="text-slate-800" />
                         </div>
                         <h3 className="font-bold text-slate-800 text-lg">{title}</h3>
                     </div>
-                    <span className="text-xs font-bold bg-white/50 px-2.5 py-1 rounded-lg text-slate-800">
-                        {items.length} Events
-                    </span>
-                </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold bg-white/50 px-2.5 py-1 rounded-lg text-slate-800">
+                            {items.length} Events
+                        </span>
+                        <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={20} className="text-slate-600" />
+                    </div>
+                </button>
 
-                <div className="flex flex-col gap-3">
-                    {items.length === 0 ? (
-                        <div className="bg-white/50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center opacity-70 mb-4">
-                            <p className="font-bold text-slate-400 text-sm">Nothing scheduled</p>
-                        </div>
-                    ) : (
-                        items.map((item) => (
-                            <div 
-                                key={`${item.type}-${item.id}`} 
-                                className={`bg-white p-5 rounded-[1.25rem] border border-slate-100 shadow-sm flex flex-col gap-3 transition-transform active:scale-[0.99] ${
-                                    item.type === 'medication' && item.data.taken ? 'opacity-80 bg-green-50/20' : ''
-                                }`}
-                                onClick={() => {
-                                    if (item.type === 'medication') onToggleMedication(item.id);
-                                }}
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div className="flex gap-3 items-center">
-                                        <div className={`p-2.5 rounded-xl ${item.color}`}>
-                                            <Icon name={item.icon} size={20} />
-                                        </div>
-                                        <div>
-                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{item.type}</span>
-                                            <h4 className={`font-bold text-slate-900 text-lg leading-tight ${item.data.taken ? 'text-green-800' : ''}`}>
-                                                {item.title}
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    {item.type === 'medication' && (
-                                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${item.data.taken ? 'bg-green-500 border-green-500 text-white' : 'border-slate-200 text-slate-200'}`}>
-                                            <Icon name="check" size={16} />
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                <div className="pl-[3.25rem]">
-                                    <p className="text-sm text-slate-500 font-medium mb-2">
-                                        {item.subtitle}
-                                        {item.type === 'medication' && !item.data.taken && (
-                                            <span className="text-brand-600 ml-2 font-bold">• Tap to log</span>
-                                        )}
-                                    </p>
-                                    <div className="inline-flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md text-slate-600 font-bold text-xs">
-                                        <Icon name="clock" size={12} />
-                                        <span>{item.time}</span>
-                                    </div>
-                                </div>
+                {isOpen && (
+                    <div className="flex flex-col gap-3 animate-fade-in">
+                        {items.length === 0 ? (
+                            <div className="bg-white/50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-6 text-center opacity-70 mb-4">
+                                <p className="font-bold text-slate-400 text-sm">Nothing scheduled</p>
                             </div>
-                        ))
-                    )}
-                </div>
+                        ) : (
+                            items.map((item) => (
+                                <div 
+                                    key={`${item.type}-${item.id}`} 
+                                    className={`bg-white p-5 rounded-[1.25rem] border border-slate-100 shadow-sm flex flex-col gap-3 transition-transform active:scale-[0.99] ${
+                                        item.type === 'medication' && item.data.taken ? 'opacity-80 bg-green-50/20' : ''
+                                    }`}
+                                    onClick={() => {
+                                        if (item.type === 'medication') onToggleMedication(item.id);
+                                    }}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex gap-3 items-center">
+                                            <div className={`p-2.5 rounded-xl ${item.color}`}>
+                                                <Icon name={item.icon} size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{item.type}</span>
+                                                <h4 className={`font-bold text-slate-900 text-lg leading-tight ${item.data.taken ? 'text-green-800' : ''}`}>
+                                                    {item.title}
+                                                </h4>
+                                            </div>
+                                        </div>
+                                        {item.type === 'medication' && (
+                                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${item.data.taken ? 'bg-green-500 border-green-500 text-white' : 'border-slate-200 text-slate-200'}`}>
+                                                <Icon name="check" size={16} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="pl-[3.25rem]">
+                                        <p className="text-sm text-slate-500 font-medium mb-2">
+                                            {item.subtitle}
+                                            {item.type === 'medication' && !item.data.taken && (
+                                                <span className="text-brand-600 ml-2 font-bold">• Tap to log</span>
+                                            )}
+                                        </p>
+                                        <div className="inline-flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md text-slate-600 font-bold text-xs">
+                                            <Icon name="clock" size={12} />
+                                            <span>{item.time}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
             </div>
         );
     };
@@ -186,7 +212,10 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                 </div>
                 
                 <div className="flex gap-3 mt-6 relative z-10">
-                    <div className="flex-1 flex flex-col gap-1 bg-brand-50 p-3 rounded-2xl border border-brand-100">
+                    <button 
+                        onClick={onNavigateToMeds}
+                        className="flex-1 flex flex-col gap-1 bg-brand-50 p-3 rounded-2xl border border-brand-100 text-left transition-transform active:scale-95 hover:bg-brand-100/50"
+                    >
                         <div className="flex items-center gap-2 text-brand-700">
                             <Icon name="pill" size={14} />
                             <span className="text-xs font-bold uppercase tracking-wide">Meds</span>
@@ -195,8 +224,11 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                             <span className="text-2xl font-bold text-brand-900">{medications.filter(m => m.taken).length}</span>
                             <span className="text-xs font-medium text-brand-600 mb-1.5">/ {medications.length}</span>
                         </div>
-                    </div>
-                    <div className="flex-1 flex flex-col gap-1 bg-orange-50 p-3 rounded-2xl border border-orange-100">
+                    </button>
+                    <button 
+                        onClick={onNavigateToActivities}
+                        className="flex-1 flex flex-col gap-1 bg-orange-50 p-3 rounded-2xl border border-orange-100 text-left transition-transform active:scale-95 hover:bg-orange-100/50"
+                    >
                         <div className="flex items-center gap-2 text-orange-700">
                             <Icon name="sun" size={14} />
                             <span className="text-xs font-bold uppercase tracking-wide">Activity</span>
@@ -205,7 +237,7 @@ export const TodayDetail: React.FC<TodayDetailProps> = ({
                             <span className="text-2xl font-bold text-orange-900">{activities.length}</span>
                             <span className="text-xs font-medium text-orange-600 mb-1.5">Tasks</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
             </div>
 
