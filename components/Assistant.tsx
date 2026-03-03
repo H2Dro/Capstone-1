@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Icon } from './Icon';
+import { Logo } from './Logo';
 import { generateAssistantResponse } from '../services/geminiService';
 import { ChatMessage, ViewState } from '../types';
 
@@ -94,9 +95,7 @@ export const Assistant: React.FC<AssistantProps> = ({
         {/* Header */}
         <div className="bg-white p-4 px-6 flex justify-between items-center border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-950 rounded-full flex items-center justify-center text-white">
-                <Icon name="sparkles" size={20} />
-            </div>
+            <Logo className="w-10 h-10" />
             <div>
               <h2 className="text-lg font-bold text-slate-900">GoodSense AI</h2>
               <div className="flex items-center gap-1.5">

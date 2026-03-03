@@ -566,7 +566,20 @@ const App: React.FC = () => {
       case ViewState.ADD_APPOINTMENT:
         return <AddAppointment onSave={(a) => { setAppointments(prev => [...prev, a]); showSuccess('Request sent to Caregiver!', 'BACK'); }} onCancel={handleBack} />;
       case ViewState.RESCHEDULE_APPOINTMENT:
-        return selectedAppointment ? <RescheduleAppointment appointment={selectedAppointment} onSave={(a) => { setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); showSuccess('Visit rescheduled!', 'BACK'); }} onCancel={handleBack} /> : null;
+        return selectedAppointment ? (
+          <RescheduleAppointment 
+            appointment={selectedAppointment} 
+            onSave={(a) => { 
+              setAppointments(prev => prev.map(old => old.id === a.id ? a : old)); 
+              showSuccess('Visit rescheduled!', 'BACK'); 
+            }} 
+            onCancel={handleBack}
+            onCancelAppointment={(id) => {
+              setAppointments(prev => prev.filter(a => a.id !== id));
+              showSuccess('Visit cancelled', 'BACK');
+            }}
+          />
+        ) : null;
       case ViewState.TODAY_DETAIL: 
         return (
           <TodayDetail 

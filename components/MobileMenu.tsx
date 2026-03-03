@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Icon } from './Icon';
+import { Logo } from './Logo';
 import { ViewState, User } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -139,7 +140,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onNavig
         </div>
 
         {/* Sign Out */}
-        <div className="p-6 shrink-0 mt-auto">
+        <div className="p-6 shrink-0 mt-auto space-y-4">
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-6 p-5 rounded-2xl text-[#FF8597] hover:bg-rose-500/10 active:scale-95 transition-all group"
@@ -147,6 +148,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onNavig
             <Icon name="log-out" size={28} className="group-hover:translate-x-1 transition-transform" />
             <span className="text-xl font-bold">Sign out</span>
           </button>
+          
+          <div className="flex justify-center pt-2 opacity-40">
+            <Logo className="w-16 h-16 grayscale brightness-200" />
+          </div>
         </div>
       </div>
     </div>

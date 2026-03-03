@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Icon } from './Icon';
+import { Logo } from './Logo';
 import { User } from '../types';
 
 interface LoginProps {
@@ -50,9 +51,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         
         {/* Logo & Welcome */}
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-brand-600 rounded-[2rem] flex items-center justify-center text-white mx-auto shadow-xl shadow-brand-100 mb-6">
-            <Icon name="shield" size={40} />
-          </div>
+          <Logo className="w-24 h-24 mx-auto mb-6" />
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
             GoodSense
           </h1>

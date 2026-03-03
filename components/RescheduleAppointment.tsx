@@ -7,11 +7,13 @@ interface RescheduleAppointmentProps {
   appointment: AppointmentItem;
   onSave: (updatedAppointment: AppointmentItem) => void;
   onCancel: () => void;
+  onCancelAppointment: (id: string) => void;
 }
 
-export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ appointment, onSave, onCancel }) => {
+export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ appointment, onSave, onCancel, onCancelAppointment }) => {
   const [selectedDate, setSelectedDate] = useState<number>(parseInt(appointment.date.split(' ')[1]) || new Date().getDate());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const MORNING_SLOTS = ['09:00 AM', '09:30 AM', '10:00 AM', '11:15 AM', '11:45 AM'];
   const AFTERNOON_SLOTS = ['01:00 PM', '02:30 PM', '03:15 PM', '04:00 PM', '04:30 PM'];
@@ -166,7 +168,7 @@ export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ ap
       </div>
 
       {/* Footer */}
-      <div className="p-6 bg-white border-t border-slate-100 safe-area-bottom">
+      <div className="p-6 bg-white border-t border-slate-100 safe-area-bottom space-y-3">
         <button
             onClick={handleSave}
             disabled={!selectedSlot}
@@ -178,7 +180,38 @@ export const RescheduleAppointment: React.FC<RescheduleAppointmentProps> = ({ ap
         >
             Confirm Reschedule
         </button>
+        
+        <button
+            onClick={() => setShowCancelConfirm(true)}
+            className="w-full py-4 rounded-2xl font-bold text-rose-500 hover:bg-rose-50 transition-all active:scale-[0.98]"
+        >
+            Cancel Appointment
+        </button>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelConfirm && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-md px-6 animate-fade-in" onClick={() => setShowCancelConfirm(false)}>
+              <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-xs text-center space-y-6 shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+                  <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+                    <Icon name="trash" size={28} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-slate-900">Cancel Visit?</h3>
+                    <p className="text-slate-400 font-bold text-sm leading-tight">Are you sure you want to cancel your visit with {appointment.doctorName}?</p>
+                  </div>
+                  <div className="flex gap-3">
+                      <button onClick={() => setShowCancelConfirm(false)} className="flex-1 py-4 bg-slate-100 rounded-xl font-black text-slate-500 uppercase text-[10px] tracking-widest active:scale-95 transition-transform">Keep</button>
+                      <button 
+                        onClick={() => { onCancelAppointment(appointment.id); }} 
+                        className="flex-1 py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100 active:scale-95 transition-transform"
+                      >
+                        Cancel Visit
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
