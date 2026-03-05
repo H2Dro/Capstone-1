@@ -65,11 +65,17 @@ export const Header: React.FC<HeaderProps> = ({ view, onMenuOpen, onProfileOpen,
         disabled={!onTitleClick}
         className={`text-center flex-1 min-w-0 flex flex-col items-center justify-center active:scale-95 transition-transform ${onTitleClick ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        {view === ViewState.DASHBOARD && <h2 className="text-stone-400 font-black uppercase tracking-[0.2em] text-[9px] mb-0.5">{currentDateLabel}</h2>}
-        <div className="flex items-center gap-1.5 justify-center">
-          {view === ViewState.DASHBOARD && <Logo className="w-5 h-5" />}
-          <h1 className="text-xs font-black text-stone-900 leading-none uppercase tracking-widest truncate">{getHeaderTitle()}</h1>
-        </div>
+        {view === ViewState.DASHBOARD ? (
+          <div className="flex flex-col items-center">
+            <h2 className="text-stone-400 font-black uppercase tracking-[0.2em] text-[8px] mb-1">{currentDateLabel}</h2>
+            <Logo className="w-6 h-6" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 justify-center">
+            <Logo className="w-5 h-5 opacity-40 grayscale" />
+            <h1 className="text-xs font-black text-stone-900 leading-none uppercase tracking-widest truncate">{getHeaderTitle()}</h1>
+          </div>
+        )}
       </button>
 
       <div className="flex items-center gap-2.5 w-14 justify-end">
